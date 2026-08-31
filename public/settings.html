@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ustawienia scoringu - Lead Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+        }
+
+        button {
+            border: none;
+            padding: 11px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .primary {
+            background: #111827;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .status {
+            display: none;
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 800px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <div>
+        <h1>⚙️ Ustawienia scoringu</h1>
+        <p>Dostosuj ocenę leadów dla swojej firmy</p>
+    </div>
+
+    <button class="secondary" onclick="window.location.href='/'">
+        ← Dashboard
+    </button>
+
+</header>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>💰 Budżet</h2>
+
+        <div class="grid">
+
+            <div class="form-group">
+                <label>Próg wysokiego budżetu</label>
+                <input id="budzet_wysoki" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Próg średniego budżetu</label>
+                <input id="budzet_sredni" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Punkty za wysoki budżet</label>
+                <input id="punkty_budzet_wysoki" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Punkty za średni budżet</label>
+                <input id="punkty_budzet_sredni" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Punkty za niski budżet</label>
+                <input id="punkty_budzet_niski" type="number">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>⏱ Termin zakupu</h2>
+
+        <div class="grid">
+
+            <div class="form-group">
+                <label>Punkty za szybki termin</label>
+                <input id="punkty_termin_szybki" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Punkty za inny termin</label>
+                <input id="punkty_termin_inny" type="number">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🔥 Zainteresowanie</h2>
+
+        <div class="grid">
+
+            <div class="form-group">
+                <label>Punkty za wysokie zainteresowanie</label>
+                <input id="punkty_zainteresowanie_wysokie" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Punkty za średnie zainteresowanie</label>
+                <input id="punkty_zainteresowanie_srednie" type="number">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>📊 Klasyfikacja</h2>
+
+        <div class="grid">
+
+            <div class="form-group">
+                <label>Próg HOT</label>
+                <input id="prog_hot" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Próg WARM</label>
+                <input id="prog_warm" type="number">
+            </div>
+
+        </div>
+
+        <button class="primary" onclick="zapisz()">
+            💾 Zapisz ustawienia
+        </button>
+
+        <div id="status" class="status"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+const token =
+    localStorage.getItem("leadAnalyzerToken");
+
+if (!token) {
+    window.location.href = "/";
+}
+
+const pola = [
+    "budzet_wysoki",
+    "budzet_sredni",
+    "punkty_budzet_wysoki",
+    "punkty_budzet_sredni",
+    "punkty_budzet_niski",
+    "punkty_termin_szybki",
+    "punkty_termin_inny",
+    "punkty_zainteresowanie_wysokie",
+    "punkty_zainteresowanie_srednie",
+    "prog_hot",
+    "prog_warm"
+];
+
+async function pobierz() {
+
+    const response = await fetch(
+        "/api/company/scoring",
+        {
+            headers: {
+                "Authorization":
+                    `Bearer ${token}`
+            }
+        }
+    );
+
+    const data =
+        await response.json();
+
+    if (!response.ok) {
+        pokazBlad(data.message || "Błąd pobierania ustawień.");
+        return;
+    }
+
+    pola.forEach(pole => {
+
+        document.getElementById(pole).value =
+            data.scoring[pole];
+    });
+}
+
+
+async function zapisz() {
+
+    const body = {};
+
+    pola.forEach(pole => {
+        body[pole] =
+            Number(
+                document.getElementById(pole).value
+            );
+    });
+
+
+    const response = await fetch(
+        "/api/company/scoring",
+        {
+            method: "PATCH",
+
+            headers: {
+                "Content-Type":
+                    "application/json",
+
+                "Authorization":
+                    `Bearer ${token}`
+            },
+
+            body:
+                JSON.stringify(body)
+        }
+    );
+
+
+    const data =
+        await response.json();
+
+
+    if (!response.ok) {
+        pokazBlad(data.message || "Nie udało się zapisać.");
+        return;
+    }
+
+
+    pokazSukces(
+        "✅ Ustawienia scoringu zapisane."
+    );
+}
+
+
+function pokazSukces(tekst) {
+
+    const status =
+        document.getElementById("status");
+
+    status.className =
+        "status success";
+
+    status.style.display =
+        "block";
+
+    status.textContent =
+        tekst;
+}
+
+
+function pokazBlad(tekst) {
+
+    const status =
+        document.getElementById("status");
+
+    status.className =
+        "status error";
+
+    status.style.display =
+        "block";
+
+    status.textContent =
+        `❌ ${tekst}`;
+}
+
+
+pobierz();
+
+</script>
+
+</body>
+</html>

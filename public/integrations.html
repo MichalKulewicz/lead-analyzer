@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Integracje - Lead Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+        }
+
+        button {
+            border: none;
+            padding: 11px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            background: #111827;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        .label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .key-row,
+        .endpoint-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .value-box {
+            flex: 1;
+            min-width: 260px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 13px 14px;
+            border-radius: 8px;
+            font-family: Consolas, monospace;
+            word-break: break-all;
+        }
+
+        pre {
+            background: #111827;
+            color: #f9fafb;
+            padding: 18px;
+            border-radius: 10px;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .danger-box {
+            border: 1px solid #fecaca;
+            background: #fff;
+        }
+
+        .danger-box h2 {
+            color: #b91c1c;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <div>
+        <h1>🔌 Integracje</h1>
+        <p>Połącz zewnętrzne systemy z Lead Analyzerem</p>
+    </div>
+
+    <button class="secondary" onclick="wrocDoPanelu()">
+        ← Dashboard
+    </button>
+
+</header>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>🔑 Klucz API firmy</h2>
+
+        <div class="label">
+            Twój API key
+        </div>
+
+        <div class="key-row">
+
+            <div id="apiKeyView" class="value-box">
+                Ładowanie...
+            </div>
+
+            <button
+                id="showButton"
+                class="secondary"
+                onclick="przelaczWidokKlucza()">
+                👁 Pokaż
+            </button>
+
+            <button
+                class="primary"
+                onclick="kopiujApiKey()">
+                📋 Kopiuj
+            </button>
+
+        </div>
+
+        <div id="copySuccess" class="success">
+            ✅ Klucz API skopiowany.
+        </div>
+
+        <div id="apiError" class="error"></div>
+
+        <br>
+
+        <div class="warning">
+            ⚠️ Traktuj API key jak hasło. Nie publikuj go na GitHubie,
+            stronie internetowej ani w publicznym kodzie JavaScript.
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🌐 Endpoint</h2>
+
+        <div class="label">
+            Dodawanie zewnętrznego leada
+        </div>
+
+        <div class="endpoint-row">
+
+            <div class="value-box">
+                POST /api/external/leads
+            </div>
+
+            <button
+                class="primary"
+                onclick="kopiujEndpoint()">
+                📋 Kopiuj
+            </button>
+
+        </div>
+
+        <div id="endpointSuccess" class="success">
+            ✅ Endpoint skopiowany.
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>📨 Wymagany nagłówek</h2>
+
+        <pre>X-API-Key: TWÓJ_API_KEY</pre>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>📦 Dane wysyłane do API</h2>
+
+        <pre>{
+  "wiadomosc": "Szukam mieszkania w Warszawie do 800000 zł. Chcę kupić w tym miesiącu."
+}</pre>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🧪 Przykładowy request</h2>
+
+        <pre id="curlExample">Ładowanie...</pre>
+
+        <button
+            class="primary"
+            onclick="kopiujCurl()">
+            📋 Kopiuj przykład
+        </button>
+
+        <div id="curlSuccess" class="success">
+            ✅ Przykład skopiowany.
+        </div>
+
+    </div>
+
+
+    <div class="card danger-box">
+
+        <h2>⚠️ Bezpieczeństwo API</h2>
+
+        <p>
+            Jeśli podejrzewasz, że ktoś poznał Twój klucz API,
+            wygeneruj nowy.
+        </p>
+
+        <p>
+            <strong>
+                Stary klucz natychmiast przestanie działać.
+            </strong>
+        </p>
+
+        <button
+            id="regenerateButton"
+            class="danger"
+            onclick="regenerujApiKey()">
+            🔄 Regeneruj API key
+        </button>
+
+        <div id="regenerateSuccess" class="success">
+            ✅ Wygenerowano nowy API key. Stary klucz został unieważniony.
+        </div>
+
+        <div id="regenerateError" class="error"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let token =
+    localStorage.getItem("leadAnalyzerToken");
+
+let apiKey = "";
+
+let pokazKlucz = false;
+
+
+// ========================================
+// LOGOWANIE
+// ========================================
+
+if (!token) {
+    window.location.href = "/";
+}
+
+
+// ========================================
+// API KEY
+// ========================================
+
+async function pobierzApiKey() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/company/api-key",
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+        const data =
+            await response.json();
+
+
+        if (response.status === 401) {
+
+            localStorage.removeItem(
+                "leadAnalyzerToken"
+            );
+
+            window.location.href = "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się pobrać API key."
+            );
+        }
+
+
+        apiKey =
+            data.apiKey || "";
+
+        aktualizujKlucz();
+
+        aktualizujCurl();
+
+
+    } catch (error) {
+
+        pokazBlad(
+            "apiError",
+            error.message
+        );
+    }
+}
+
+
+// ========================================
+// REGENERACJA API KEY
+// ========================================
+
+async function regenerujApiKey() {
+
+    const potwierdzenie =
+        confirm(
+            "Na pewno wygenerować nowy API key?\n\n" +
+            "Stary klucz natychmiast przestanie działać."
+        );
+
+
+    if (!potwierdzenie) {
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "regenerateButton"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "⏳ Generuję...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/company/api-key/regenerate",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (response.status === 401) {
+
+            localStorage.removeItem(
+                "leadAnalyzerToken"
+            );
+
+            window.location.href = "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się wygenerować nowego klucza."
+            );
+        }
+
+
+        apiKey =
+            data.apiKey;
+
+
+        pokazKlucz = true;
+
+
+        aktualizujKlucz();
+
+        aktualizujCurl();
+
+
+        pokazKomunikat(
+            "regenerateSuccess",
+            4000
+        );
+
+
+    } catch (error) {
+
+        pokazBlad(
+            "regenerateError",
+            error.message
+        );
+
+
+    } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "🔄 Regeneruj API key";
+    }
+}
+
+
+// ========================================
+// WIDOK KLUCZA
+// ========================================
+
+function aktualizujKlucz() {
+
+    const view =
+        document.getElementById(
+            "apiKeyView"
+        );
+
+
+    if (!apiKey) {
+
+        view.textContent =
+            "Brak klucza.";
+
+        return;
+    }
+
+
+    if (pokazKlucz) {
+
+        view.textContent =
+            apiKey;
+
+    } else {
+
+        const poczatek =
+            apiKey.substring(
+                0,
+                12
+            );
+
+        view.textContent =
+            poczatek +
+            "••••••••••••••••••••••••••";
+    }
+
+
+    document.getElementById(
+        "showButton"
+    ).textContent =
+        pokazKlucz
+            ? "🙈 Ukryj"
+            : "👁 Pokaż";
+}
+
+
+function przelaczWidokKlucza() {
+
+    pokazKlucz =
+        !pokazKlucz;
+
+    aktualizujKlucz();
+}
+
+
+// ========================================
+// CURL
+// ========================================
+
+function aktualizujCurl() {
+
+    const origin =
+        window.location.origin;
+
+
+    document.getElementById(
+        "curlExample"
+    ).textContent =
+`curl -X POST ${origin}/api/external/leads \\
+-H "Content-Type: application/json" \\
+-H "X-API-Key: ${apiKey}" \\
+-d "{\\"wiadomosc\\":\\"Szukam mieszkania w Warszawie do 800000 zł.\\"}"`;
+}
+
+
+// ========================================
+// KOPIOWANIE
+// ========================================
+
+async function kopiujApiKey() {
+
+    if (!apiKey) {
+        return;
+    }
+
+
+    await navigator.clipboard.writeText(
+        apiKey
+    );
+
+
+    pokazKomunikat(
+        "copySuccess"
+    );
+}
+
+
+async function kopiujEndpoint() {
+
+    const endpoint =
+        window.location.origin +
+        "/api/external/leads";
+
+
+    await navigator.clipboard.writeText(
+        endpoint
+    );
+
+
+    pokazKomunikat(
+        "endpointSuccess"
+    );
+}
+
+
+async function kopiujCurl() {
+
+    const tekst =
+        document.getElementById(
+            "curlExample"
+        ).textContent;
+
+
+    await navigator.clipboard.writeText(
+        tekst
+    );
+
+
+    pokazKomunikat(
+        "curlSuccess"
+    );
+}
+
+
+// ========================================
+// KOMUNIKATY
+// ========================================
+
+function pokazKomunikat(
+    id,
+    czas = 1500
+) {
+
+    const element =
+        document.getElementById(id);
+
+
+    element.style.display =
+        "block";
+
+
+    setTimeout(
+        () => {
+
+            element.style.display =
+                "none";
+
+        },
+        czas
+    );
+}
+
+
+function pokazBlad(
+    id,
+    tekst
+) {
+
+    const element =
+        document.getElementById(id);
+
+
+    element.textContent =
+        `❌ ${tekst}`;
+
+    element.style.display =
+        "block";
+}
+
+
+// ========================================
+// DASHBOARD
+// ========================================
+
+function wrocDoPanelu() {
+
+    window.location.href = "/";
+}
+
+
+// ========================================
+// START
+// ========================================
+
+pobierzApiKey();
+
+</script>
+
+</body>
+</html>

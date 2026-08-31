@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Przypisywanie leadów - Lead Analyzer
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 20px 28px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .primary {
+            background: #111827;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        }
+
+        .lead-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .city {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .score {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .details {
+            margin-top: 7px;
+            color: #6b7280;
+        }
+
+        .assign-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            min-width: 240px;
+        }
+
+        .badge {
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .hot {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .warm {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .cold {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .success {
+            margin-top: 10px;
+            color: #166534;
+            font-weight: bold;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div>
+
+        <h1>👤 Przypisywanie leadów</h1>
+
+        <p>
+            Przydziel klientów konkretnym pracownikom
+        </p>
+
+    </div>
+
+    <button
+        class="secondary"
+        onclick="window.location.href='/'">
+
+        ← Dashboard
+
+    </button>
+
+</header>
+
+
+<div class="container">
+
+    <div
+        id="errorBox"
+        class="error">
+    </div>
+
+    <div id="leads"></div>
+
+</div>
+
+
+<script>
+
+const token =
+    localStorage.getItem(
+        "leadAnalyzerToken"
+    );
+
+
+if (!token) {
+
+    window.location.href = "/";
+}
+
+
+let users = [];
+
+
+// ======================================================
+// START
+// ======================================================
+
+async function start() {
+
+    try {
+
+        await pobierzUsers();
+
+        await pobierzLeady();
+
+    } catch (error) {
+
+        pokazBlad(
+            error.message
+        );
+    }
+}
+
+
+// ======================================================
+// USERS
+// ======================================================
+
+async function pobierzUsers() {
+
+    const response =
+        await fetch(
+            "/api/company/assignable-users",
+            {
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if (response.status === 401) {
+
+        localStorage.removeItem(
+            "leadAnalyzerToken"
+        );
+
+        window.location.href = "/";
+
+        return;
+    }
+
+
+    if (response.status === 403) {
+
+        throw new Error(
+            "Tylko OWNER lub ADMIN może przypisywać leady."
+        );
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.message ||
+            "Nie udało się pobrać użytkowników."
+        );
+    }
+
+
+    users =
+        data.users || [];
+}
+
+
+// ======================================================
+// LEADY
+// ======================================================
+
+async function pobierzLeady() {
+
+    const response =
+        await fetch(
+            "/api/leads",
+            {
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.message ||
+            "Nie udało się pobrać leadów."
+        );
+    }
+
+
+    wyswietlLeady(
+        data.leads || []
+    );
+}
+
+
+// ======================================================
+// WYŚWIETLANIE
+// ======================================================
+
+function wyswietlLeady(leady) {
+
+    const box =
+        document.getElementById(
+            "leads"
+        );
+
+
+    box.innerHTML = "";
+
+
+    leady.forEach(lead => {
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+
+        card.className =
+            "card";
+
+
+        const options =
+            users.map(user => {
+
+                const selected =
+                    Number(
+                        lead.assigned_user_id
+                    ) ===
+                    Number(user.id)
+                        ? "selected"
+                        : "";
+
+
+                return `
+                    <option
+                        value="${user.id}"
+                        ${selected}>
+
+                        ${user.imie || user.email}
+                        (${user.rola})
+
+                    </option>
+                `;
+
+            }).join("");
+
+
+        const badgeClass =
+            lead.klasyfikacja === "HOT"
+                ? "hot"
+                : lead.klasyfikacja === "WARM"
+                    ? "warm"
+                    : "cold";
+
+
+        card.innerHTML = `
+
+            <div class="lead-top">
+
+                <div>
+
+                    <div class="city">
+                        #${lead.id}
+                        ${lead.miasto || "Brak miasta"}
+                    </div>
+
+                    <div class="details">
+
+                        Budżet:
+                        ${
+                            lead.budzet
+                                ? Number(
+                                    lead.budzet
+                                ).toLocaleString(
+                                    "pl-PL"
+                                )
+                                : "-"
+                        }
+                        ${lead.waluta || ""}
+
+                    </div>
+
+                    <div class="details">
+
+                        Status:
+                        ${lead.status_obslugi || "NOWY"}
+
+                    </div>
+
+                </div>
+
+
+                <div>
+
+                    <div class="score">
+                        ${lead.score}/100
+                    </div>
+
+                    <br>
+
+                    <span
+                        class="badge ${badgeClass}">
+
+                        ${lead.klasyfikacja}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="assign-row">
+
+                <strong>
+                    👤 Przypisany do:
+                </strong>
+
+
+                <select
+                    id="assign-${lead.id}">
+
+                    <option value="">
+                        -- Brak przypisania --
+                    </option>
+
+                    ${options}
+
+                </select>
+
+
+                <button
+                    class="primary"
+                    onclick="zapiszPrzypisanie(${lead.id})">
+
+                    💾 Zapisz
+
+                </button>
+
+            </div>
+
+
+            <div
+                id="status-${lead.id}"
+                class="success">
+            </div>
+        `;
+
+
+        box.appendChild(
+            card
+        );
+    });
+}
+
+
+// ======================================================
+// ZAPIS PRZYPISANIA
+// ======================================================
+
+async function zapiszPrzypisanie(
+    leadId
+) {
+
+    const select =
+        document.getElementById(
+            `assign-${leadId}`
+        );
+
+
+    const value =
+        select.value;
+
+
+    const userId =
+        value === ""
+            ? null
+            : Number(value);
+
+
+    const response =
+        await fetch(
+            `/api/leads/${leadId}/assign`,
+            {
+                method: "PATCH",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${token}`
+                },
+
+                body:
+                    JSON.stringify({
+                        user_id:
+                            userId
+                    })
+            }
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if (!response.ok) {
+
+        pokazBlad(
+            data.message ||
+            "Nie udało się przypisać leada."
+        );
+
+        return;
+    }
+
+
+    const status =
+        document.getElementById(
+            `status-${leadId}`
+        );
+
+
+    status.textContent =
+        userId
+            ? "✅ Lead przypisany."
+            : "✅ Przypisanie usunięte.";
+
+
+    setTimeout(
+        () => {
+
+            status.textContent = "";
+
+        },
+        2000
+    );
+}
+
+
+// ======================================================
+// BŁĄD
+// ======================================================
+
+function pokazBlad(tekst) {
+
+    const box =
+        document.getElementById(
+            "errorBox"
+        );
+
+
+    box.style.display =
+        "block";
+
+    box.textContent =
+        `❌ ${tekst}`;
+}
+
+
+// ======================================================
+// START
+// ======================================================
+
+start();
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Plany - Lead Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 22px 28px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+        }
+
+        button {
+            border: none;
+            border-radius: 9px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 35px auto;
+            padding: 0 20px 50px;
+        }
+
+        .current-plan-banner {
+            display: none;
+
+            background: white;
+            border: 2px solid #16a34a;
+            border-radius: 15px;
+
+            padding: 20px 24px;
+            margin-bottom: 30px;
+
+            box-shadow: 0 3px 12px rgba(0,0,0,.06);
+        }
+
+        .current-plan-banner.show {
+            display: block;
+        }
+
+        .current-plan-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .current-plan-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .current-plan-name {
+            color: #15803d;
+        }
+
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(200px, 1fr));
+            gap: 18px;
+
+            margin-top: 20px;
+        }
+
+        .usage-box {
+            background: #f9fafb;
+            border-radius: 11px;
+            padding: 15px;
+        }
+
+        .usage-label {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .usage-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            width: 100%;
+            height: 9px;
+
+            background: #e5e7eb;
+            border-radius: 20px;
+
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #16a34a;
+            width: 0%;
+            transition: width .3s ease;
+        }
+
+        .progress-fill.warning {
+            background: #d97706;
+        }
+
+        .progress-fill.full {
+            background: #dc2626;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .intro h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .intro p {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .plans {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .plan {
+            background: white;
+            border-radius: 16px;
+            padding: 26px;
+
+            box-shadow: 0 3px 12px rgba(0,0,0,.08);
+
+            position: relative;
+
+            border: 2px solid transparent;
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .plan:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,.10);
+        }
+
+        .plan.current {
+            border-color: #16a34a;
+        }
+
+        .plan.recommended {
+            border-color: #7c3aed;
+            transform: translateY(-6px);
+        }
+
+        .plan.recommended:hover {
+            transform: translateY(-9px);
+        }
+
+        .recommended-badge,
+        .current-badge {
+            position: absolute;
+            top: -13px;
+            left: 50%;
+            transform: translateX(-50%);
+
+            color: white;
+
+            padding: 6px 12px;
+            border-radius: 20px;
+
+            font-size: 12px;
+            font-weight: bold;
+
+            white-space: nowrap;
+        }
+
+        .recommended-badge {
+            background: #7c3aed;
+        }
+
+        .current-badge {
+            background: #16a34a;
+        }
+
+        .plan h3 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+
+        .price {
+            font-size: 34px;
+            font-weight: bold;
+            margin: 15px 0 4px;
+        }
+
+        .price span {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: normal;
+        }
+
+        .setup {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 22px;
+            min-height: 30px;
+        }
+
+        .features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 25px;
+        }
+
+        .features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .features li:last-child {
+            border-bottom: none;
+        }
+
+        .plan-button {
+            width: 100%;
+            background: #111827;
+            color: white;
+        }
+
+        .plan-button:hover {
+            opacity: .92;
+        }
+
+        .plan-button.pro {
+            background: #7c3aed;
+        }
+
+        .plan-button.current-button {
+            background: #16a34a;
+        }
+
+        .plan-button:disabled {
+            opacity: .75;
+            cursor: default;
+        }
+
+        .bottom-info {
+            margin-top: 35px;
+
+            background: white;
+            border-radius: 15px;
+
+            padding: 22px;
+
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+
+            box-shadow: 0 3px 12px rgba(0,0,0,.06);
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .info-text {
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .error {
+            display: none;
+
+            background: #fee2e2;
+            color: #991b1b;
+
+            padding: 14px;
+            border-radius: 8px;
+
+            margin-bottom: 20px;
+        }
+
+        .error.show {
+            display: block;
+        }
+.billing-section {
+    background: white;
+    border-radius: 16px;
+
+    padding: 24px;
+
+    margin-bottom: 30px;
+
+    box-shadow:
+        0 3px 12px rgba(0,0,0,.06);
+}
+
+.billing-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 22px;
+}
+
+.billing-header h2 {
+    margin: 0 0 5px;
+}
+
+.billing-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.billing-status {
+    padding: 8px 14px;
+    border-radius: 20px;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    background: #dcfce7;
+    color: #166534;
+}
+
+.billing-status.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.billing-status.trial {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.billing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 25px;
+}
+
+.billing-box {
+    background: #f9fafb;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 11px;
+
+    padding: 16px;
+}
+
+.billing-label {
+    font-size: 12px;
+    color: #6b7280;
+
+    font-weight: bold;
+
+    margin-bottom: 7px;
+}
+
+.billing-value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.history-section {
+    border-top: 1px solid #e5e7eb;
+
+    padding-top: 20px;
+}
+
+.history-section h3 {
+    margin-top: 0;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 14px 0;
+
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-change {
+    font-weight: bold;
+}
+
+.history-meta {
+    margin-top: 5px;
+
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.history-date {
+    color: #6b7280;
+    font-size: 13px;
+
+    white-space: nowrap;
+}
+
+.history-empty {
+    color: #6b7280;
+
+    padding: 12px 0;
+}
+        @media (max-width: 1000px) {
+
+            .plans {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .bottom-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+.billing-grid {
+    grid-template-columns: 1fr;
+}
+
+.billing-header {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.history-item {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+            .plans {
+                grid-template-columns: 1fr;
+            }
+
+            .usage-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .plan.recommended,
+            .plan.recommended:hover {
+                transform: none;
+            }
+
+            header {
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+        /* ================================================== */
+/* TESTOWY CHECKOUT */
+/* ================================================== */
+
+.checkout-overlay {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    background: rgba(17, 24, 39, .82);
+
+    z-index: 999999;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+}
+
+.checkout-overlay.show {
+    display: flex;
+}
+
+.checkout-modal {
+    width: 100%;
+    max-width: 520px;
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 30px;
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.35);
+}
+
+.checkout-icon {
+    text-align: center;
+    font-size: 48px;
+
+    margin-bottom: 10px;
+}
+
+.checkout-modal h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+.checkout-summary {
+    margin-top: 24px;
+}
+
+.checkout-row {
+    display: flex;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 12px 0;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.checkout-row.total {
+    font-size: 18px;
+
+    border-bottom: none;
+
+    padding-top: 18px;
+}
+
+.checkout-actions {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 24px;
+}
+
+.checkout-actions button {
+    flex: 1;
+}
+
+.checkout-primary {
+    background: #7c3aed;
+    color: white;
+
+    border: none;
+    border-radius: 9px;
+
+    padding: 13px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.checkout-secondary {
+    background: #e5e7eb;
+    color: #111827;
+
+    border: none;
+    border-radius: 9px;
+
+    padding: 13px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+.history-toggle {
+    width: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: transparent;
+    border: none;
+
+    padding: 10px 0;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    color: #111827;
+}
+
+.history-arrow {
+    transition: transform .2s ease;
+}
+
+.history-content {
+    display: block;
+}
+
+.history-content.collapsed {
+    display: none;
+}
+
+.history-toggle.collapsed .history-arrow {
+    transform: rotate(-90deg);
+}
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <div>
+        <h1>💳 Plany Lead Analyzer</h1>
+        <p>
+            Wybierz plan dopasowany do swojego zespołu
+        </p>
+    </div>
+
+    <button
+        class="secondary"
+        onclick="window.location.href='/'">
+
+        ← Dashboard
+
+    </button>
+
+</header>
+<div class="container">
+
+    <div
+        id="errorBox"
+        class="error">
+    </div>
+
+
+    <!-- ============================================= -->
+    <!-- AKTUALNY PLAN -->
+    <!-- ============================================= -->
+
+    <div
+        id="currentPlanBanner"
+        class="current-plan-banner">
+
+        <div class="current-plan-top">
+
+            <div class="current-plan-title">
+
+                ✓ Twój aktualny plan:
+
+                <span
+                    id="currentPlanName"
+                    class="current-plan-name">
+                    ...
+                </span>
+
+            </div>
+
+            <div id="currentPlanPrice">
+                ...
+            </div>
+
+        </div>
+
+
+        <div class="usage-grid">
+
+            <div class="usage-box">
+
+                <div class="usage-label">
+                    UŻYTKOWNICY
+                </div>
+
+                <div
+                    id="usersUsage"
+                    class="usage-value">
+                    ...
+                </div>
+
+                <div class="progress">
+                    <div
+                        id="usersProgress"
+                        class="progress-bar">
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="usage-box">
+
+                <div class="usage-label">
+                    LEADY AI
+                </div>
+
+                <div
+                    id="leadsUsage"
+                    class="usage-value">
+                    ...
+                </div>
+
+                <div class="progress">
+                    <div
+                        id="leadsProgress"
+                        class="progress-bar">
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================= -->
+    <!-- INTRO -->
+    <!-- ============================================= -->
+
+    <div class="intro">
+
+        <h2>
+            Rozwijaj sprzedaż bez ograniczeń
+        </h2>
+
+        <p>
+            Zwiększ liczbę użytkowników i miesięczny limit analiz AI.
+        </p>
+
+    </div>
+
+
+    <!-- ============================================= -->
+    <!-- ROZLICZENIA -->
+    <!-- ============================================= -->
+
+    <div
+        id="billingSection"
+        class="billing-section">
+
+        <div class="billing-header">
+
+            <div>
+                <h2>💳 Abonament</h2>
+
+                <p>
+                    Informacje o Twoim planie i rozliczeniu
+                </p>
+            </div>
+
+            <div
+                id="billingStatus"
+                class="billing-status">
+                ...
+            </div>
+
+        </div>
+
+
+        <div class="billing-grid">
+
+            <div class="billing-box">
+
+                <div class="billing-label">
+                    PLAN
+                </div>
+
+                <div
+                    id="billingPlan"
+                    class="billing-value">
+                    ...
+                </div>
+
+            </div>
+
+
+            <div class="billing-box">
+
+                <div class="billing-label">
+                    ABONAMENT
+                </div>
+
+                <div
+                    id="billingPrice"
+                    class="billing-value">
+                    ...
+                </div>
+
+            </div>
+
+
+            <div class="billing-box">
+
+                <div class="billing-label">
+                    NASTĘPNE ROZLICZENIE
+                </div>
+
+                <div
+                    id="billingNextDate"
+                    class="billing-value">
+                    ...
+                </div>
+
+            </div>
+
+        </div>
+
+
+<div class="history-section">
+
+   <button
+    id="toggleBillingHistory"
+    class="history-toggle">
+
+        <span>Historia zmian planu</span>
+        <span class="history-arrow">▼</span>
+
+    </button>
+
+    <div
+        id="billingHistory"
+        class="history-content">
+
+        <div class="history-empty">
+            Ładowanie historii...
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="history-section">
+
+   <button
+    id="togglePaymentsHistory"
+    class="history-toggle">
+
+        <span>Historia płatności</span>
+        <span class="history-arrow">▼</span>
+
+    </button>
+
+    <div
+        id="paymentsHistory"
+        class="history-content">
+
+        <div class="history-empty">
+            Ładowanie płatności...
+        </div>
+
+    </div>
+
+</div>
+    <div class="plans">
+
+        <!-- STARTER -->
+
+        <div
+            id="plan-STARTER"
+            class="plan">
+
+            <div
+                id="badge-STARTER"
+                class="current-badge"
+                style="display:none;">
+
+                TWÓJ PLAN
+
+            </div>
+
+            <h3>STARTER</h3>
+
+            <div class="price">
+
+                199 zł
+
+                <span>
+                    / mies.
+                </span>
+
+            </div>
+
+            <div class="setup">
+                + 490 zł jednorazowego wdrożenia
+            </div>
+
+            <ul class="features">
+
+                <li>✅ 150 leadów AI / mies.</li>
+                <li>✅ 2 użytkowników</li>
+                <li>✅ Scoring AI</li>
+                <li>✅ Dashboard</li>
+                <li>✅ Przypisywanie leadów</li>
+
+            </ul>
+
+            <button
+                id="button-STARTER"
+                class="plan-button"
+                onclick="wybierzPlan('STARTER')">
+
+                Wybierz STARTER
+
+            </button>
+
+        </div>
+
+
+        <!-- PRO -->
+
+        <div
+            id="plan-PRO"
+            class="plan recommended">
+
+            <div
+                id="recommended-PRO"
+                class="recommended-badge">
+
+                NAJPOPULARNIEJSZY
+
+            </div>
+
+            <div
+                id="badge-PRO"
+                class="current-badge"
+                style="display:none;">
+
+                TWÓJ PLAN
+
+            </div>
+
+            <h3>PRO</h3>
+
+            <div class="price">
+
+                499 zł
+
+                <span>
+                    / mies.
+                </span>
+
+            </div>
+
+            <div class="setup">
+                + 1 490 zł jednorazowego wdrożenia
+            </div>
+
+            <ul class="features">
+
+                <li>✅ 750 leadów AI / mies.</li>
+                <li>✅ 7 użytkowników</li>
+                <li>✅ Wszystko ze STARTER</li>
+                <li>✅ Zaawansowany scoring</li>
+                <li>✅ Integracje API</li>
+                <li>✅ Priorytetowe leady</li>
+
+            </ul>
+
+            <button
+                id="button-PRO"
+                class="plan-button pro"
+                onclick="wybierzPlan('PRO')">
+
+                Przejdź na PRO
+
+            </button>
+
+        </div>
+
+
+        <!-- BUSINESS -->
+
+        <div
+            id="plan-BUSINESS"
+            class="plan">
+
+            <div
+                id="badge-BUSINESS"
+                class="current-badge"
+                style="display:none;">
+
+                TWÓJ PLAN
+
+            </div>
+
+            <h3>BUSINESS</h3>
+
+            <div class="price">
+
+                999 zł
+
+                <span>
+                    / mies.
+                </span>
+
+            </div>
+
+            <div class="setup">
+                + 2 990 zł jednorazowego wdrożenia
+            </div>
+
+            <ul class="features">
+
+                <li>✅ 3000 leadów AI / mies.</li>
+                <li>✅ 20 użytkowników</li>
+                <li>✅ Wszystko z PRO</li>
+                <li>✅ Większe zespoły</li>
+                <li>✅ Wyższe limity API</li>
+                <li>✅ Priorytetowe wsparcie</li>
+
+            </ul>
+
+            <button
+                id="button-BUSINESS"
+                class="plan-button"
+                onclick="wybierzPlan('BUSINESS')">
+
+                Przejdź na BUSINESS
+
+            </button>
+
+        </div>
+
+
+        <!-- CUSTOM -->
+
+        <div
+            id="plan-CUSTOM"
+            class="plan">
+
+            <div
+                id="badge-CUSTOM"
+                class="current-badge"
+                style="display:none;">
+
+                TWÓJ PLAN
+
+            </div>
+
+            <h3>CUSTOM</h3>
+
+            <div class="price">
+
+                od 1 999 zł
+
+                <span>
+                    / mies.
+                </span>
+
+            </div>
+
+            <div class="setup">
+                wdrożenie od 5 000 zł
+            </div>
+
+            <ul class="features">
+
+                <li>✅ Indywidualne limity</li>
+                <li>✅ Indywidualna liczba użytkowników</li>
+                <li>✅ Dedykowane integracje</li>
+                <li>✅ Niestandardowy scoring</li>
+                <li>✅ Indywidualne wdrożenie</li>
+                <li>✅ Dedykowane wsparcie</li>
+
+            </ul>
+
+            <button
+                id="button-CUSTOM"
+                class="plan-button"
+                onclick="wybierzPlan('CUSTOM')">
+
+                Skontaktuj się
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="bottom-info">
+
+        <div class="info-item">
+
+            <div class="info-icon">
+                🔒
+            </div>
+
+            <div class="info-title">
+                Bezpieczne dane
+            </div>
+
+            <div class="info-text">
+                Dane każdej firmy są oddzielone i dostępne tylko dla jej użytkowników.
+            </div>
+
+        </div>
+
+
+        <div class="info-item">
+
+            <div class="info-icon">
+                🚀
+            </div>
+
+            <div class="info-title">
+                Możesz zwiększyć plan
+            </div>
+
+            <div class="info-text">
+                Wraz ze wzrostem zespołu możesz przejść na wyższy plan.
+            </div>
+
+        </div>
+
+
+        <div class="info-item">
+
+            <div class="info-icon">
+                💬
+            </div>
+
+            <div class="info-title">
+                Wsparcie
+            </div>
+
+            <div class="info-text">
+                Przy większych wdrożeniach pomożemy skonfigurować proces i scoring.
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const token =
+    localStorage.getItem(
+        "leadAnalyzerToken"
+    );
+
+
+if (!token) {
+
+    window.location.href =
+        "/";
+}
+
+
+let aktualnyPlan =
+    null;
+
+
+// ======================================================
+// FORMATOWANIE CENY
+// ======================================================
+
+function formatujCena(
+    grosze
+) {
+
+    if (
+        grosze === null ||
+        grosze === undefined
+    ) {
+
+        return "-";
+    }
+
+
+    return new Intl.NumberFormat(
+        "pl-PL",
+        {
+            style: "currency",
+            currency: "PLN",
+            maximumFractionDigits: 0
+        }
+    ).format(
+        Number(grosze) / 100
+    );
+}
+
+
+// ======================================================
+// PROCENT WYKORZYSTANIA
+// ======================================================
+
+function procent(
+    used,
+    limit
+) {
+
+    if (
+        limit === null ||
+        limit === undefined ||
+        Number(limit) <= 0
+    ) {
+
+        return 0;
+    }
+
+
+    return Math.min(
+        (
+            Number(used) /
+            Number(limit)
+        ) * 100,
+        100
+    );
+}
+
+
+// ======================================================
+// USTAWIENIE PASKA
+// ======================================================
+
+function ustawProgress(
+    element,
+    used,
+    limit
+) {
+
+    if (!element) {
+        return;
+    }
+
+
+    const value =
+        procent(
+            used,
+            limit
+        );
+
+
+    element.style.width =
+        `${value}%`;
+
+
+    element.classList.remove(
+        "warning",
+        "full"
+    );
+
+
+    if (value >= 100) {
+
+        element.classList.add(
+            "full"
+        );
+
+    } else if (value >= 80) {
+
+        element.classList.add(
+            "warning"
+        );
+    }
+}
+
+
+// ======================================================
+// POBRANIE PLANU
+// ======================================================
+
+async function pobierzPlan() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/company/plan",
+                {
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (response.status === 401) {
+
+            localStorage.removeItem(
+                "leadAnalyzerToken"
+            );
+
+            window.location.href =
+                "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się pobrać planu."
+            );
+        }
+
+
+        aktualnyPlan =
+            data.plan.kod;
+
+
+        pokazAktualnyPlan(
+            data
+        );
+
+
+        oznaczPlan(
+            aktualnyPlan
+        );
+
+
+    } catch (error) {
+
+        pokazBlad(
+            error.message
+        );
+    }
+}
+
+
+// ======================================================
+// BANER AKTUALNEGO PLANU
+// ======================================================
+
+function pokazAktualnyPlan(
+    data
+) {
+
+    const banner =
+        document.getElementById(
+            "currentPlanBanner"
+        );
+
+
+    banner.classList.add(
+        "show"
+    );
+
+
+    document.getElementById(
+        "currentPlanName"
+    ).textContent =
+        data.plan.kod;
+
+
+    document.getElementById(
+        "currentPlanPrice"
+    ).textContent =
+        `${formatujCena(
+            data.plan.cena_miesieczna
+        )} / mies.`;
+
+
+    const users =
+        data.usage.users;
+
+
+    const leads =
+        data.usage.leads;
+
+
+    document.getElementById(
+        "usersUsage"
+    ).textContent =
+        users.limit === null
+            ? `${users.used} / bez limitu`
+            : `${users.used} / ${users.limit}`;
+
+
+    document.getElementById(
+        "leadsUsage"
+    ).textContent =
+        leads.limit === null
+            ? `${leads.used} / bez limitu`
+            : `${leads.used} / ${leads.limit}`;
+
+
+    ustawProgress(
+        document.getElementById(
+            "usersProgress"
+        ),
+        users.used,
+        users.limit
+    );
+
+
+    ustawProgress(
+        document.getElementById(
+            "leadsProgress"
+        ),
+        leads.used,
+        leads.limit
+    );
+}
+
+
+// ======================================================
+// OZNACZENIE OBECNEGO PLANU
+// ======================================================
+
+function oznaczPlan(
+    kod
+) {
+
+    const card =
+        document.getElementById(
+            `plan-${kod}`
+        );
+
+
+    const badge =
+        document.getElementById(
+            `badge-${kod}`
+        );
+
+
+    const button =
+        document.getElementById(
+            `button-${kod}`
+        );
+
+
+    if (card) {
+
+        card.classList.add(
+            "current"
+        );
+    }
+
+
+    if (badge) {
+
+        badge.style.display =
+            "block";
+    }
+
+
+    if (button) {
+
+        button.disabled =
+            true;
+
+        button.classList.add(
+            "current-button"
+        );
+
+        button.textContent =
+            "Aktualny plan";
+    }
+
+
+    if (kod === "PRO") {
+
+        const recommended =
+            document.getElementById(
+                "recommended-PRO"
+            );
+
+
+        if (recommended) {
+
+            recommended.style.display =
+                "none";
+        }
+    }
+}
+
+
+// ======================================================
+// WYBÓR PLANU
+// ======================================================
+
+async function wybierzPlan(
+    plan
+) {
+
+    if (
+        plan === aktualnyPlan
+    ) {
+        return;
+    }
+
+
+    if (
+        plan === "CUSTOM"
+    ) {
+
+        alert(
+            "Plan CUSTOM wymaga kontaktu i indywidualnej wyceny."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/billing/checkout",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`,
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            kod: plan
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się utworzyć płatności."
+            );
+        }
+
+
+        pokazCheckoutModal(
+            data.payment
+        );
+
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+    }
+}
+
+// ======================================================
+// BŁĄD
+// ======================================================
+
+function pokazBlad(
+    tekst
+) {
+
+    const box =
+        document.getElementById(
+            "errorBox"
+        );
+
+
+    box.textContent =
+        tekst;
+
+
+    box.classList.add(
+        "show"
+    );
+}
+
+// ======================================================
+// FORMATOWANIE DATY
+// ======================================================
+
+function formatujDate(
+    data
+) {
+
+    if (!data) {
+        return "-";
+    }
+
+
+    const parsed =
+        new Date(
+            data.replace(
+                " ",
+                "T"
+            ) + "Z"
+        );
+
+
+    if (
+        Number.isNaN(
+            parsed.getTime()
+        )
+    ) {
+
+        return data;
+    }
+
+
+    return new Intl.DateTimeFormat(
+        "pl-PL",
+        {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        }
+    ).format(parsed);
+}
+
+
+// ======================================================
+// STATUS ABONAMENTU
+// ======================================================
+
+function statusTekst(
+    status
+) {
+
+    const mapa = {
+
+        ACTIVE:
+            "AKTYWNY",
+
+        TRIAL:
+            "OKRES TESTOWY",
+
+        PAST_DUE:
+            "PŁATNOŚĆ ZALEGŁA",
+
+        CANCELED:
+            "ANULOWANY"
+    };
+
+
+    return (
+        mapa[status] ||
+        status ||
+        "-"
+    );
+}
+
+
+// ======================================================
+// POBRANIE BILLINGU
+// ======================================================
+
+async function pobierzBilling() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/company/billing",
+                {
+                    headers: {
+
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się pobrać rozliczeń."
+            );
+        }
+
+
+        pokazBilling(
+            data
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Billing:",
+            error
+        );
+    }
+}
+
+
+// ======================================================
+// WYŚWIETLANIE BILLINGU
+// ======================================================
+
+function pokazBilling(
+    data
+) {
+
+    const billing =
+        data.billing;
+
+
+    document.getElementById(
+        "billingPlan"
+    ).textContent =
+        billing.plan_code || "-";
+
+
+    document.getElementById(
+        "billingPrice"
+    ).textContent =
+        billing.cena_miesieczna
+            ? `${formatujCena(
+                billing.cena_miesieczna
+            )} / mies.`
+            : "-";
+
+
+    document.getElementById(
+        "billingNextDate"
+    ).textContent =
+        formatujDate(
+            billing.billing_period_end
+        );
+
+
+    const status =
+        document.getElementById(
+            "billingStatus"
+        );
+
+
+    status.textContent =
+        statusTekst(
+            billing.subscription_status
+        );
+
+
+    status.classList.remove(
+        "inactive",
+        "trial"
+    );
+
+
+    if (
+        billing.subscription_status ===
+        "TRIAL"
+    ) {
+
+        status.classList.add(
+            "trial"
+        );
+
+    } else if (
+        billing.subscription_status !==
+        "ACTIVE"
+    ) {
+
+        status.classList.add(
+            "inactive"
+        );
+    }
+
+
+    pokazHistorie(
+        data.history || []
+    );
+}
+
+
+// ======================================================
+// HISTORIA PLANÓW
+// ======================================================
+
+function pokazHistorie(
+    history
+) {
+
+    const container =
+        document.getElementById(
+            "billingHistory"
+        );
+
+
+    container.innerHTML = "";
+
+
+    if (!history.length) {
+
+        container.innerHTML =
+            `
+            <div class="history-empty">
+                Brak zmian planu.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    history.forEach(
+        item => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "history-item";
+
+
+            const osoba =
+                item.changed_by_name ||
+                item.changed_by_email ||
+                "System";
+
+
+            const stary =
+                item.old_plan ||
+                "BRAK";
+
+
+            const nowy =
+                item.new_plan ||
+                "-";
+
+
+            row.innerHTML =
+                `
+                <div>
+
+                    <div class="history-change">
+                        ${stary} → ${nowy}
+                    </div>
+
+                    <div class="history-meta">
+                        Zmienił: ${osoba}
+                        · ${item.source || "SYSTEM"}
+                    </div>
+
+                </div>
+
+                <div class="history-date">
+                    ${formatujDate(
+                        item.data_zmiany
+                    )}
+                </div>
+                `;
+
+
+            container.appendChild(
+                row
+            );
+        }
+    );
+}
+let aktywnaPlatnosc =
+    null;
+
+
+// ======================================================
+// MODAL CHECKOUTU
+// ======================================================
+
+function pokazCheckoutModal(
+    payment
+) {
+
+    aktywnaPlatnosc =
+        payment;
+
+
+    document.getElementById(
+        "checkoutPlan"
+    ).textContent =
+        payment.plan_code;
+
+
+    document.getElementById(
+        "checkoutMonthly"
+    ).textContent =
+        formatujCena(
+            payment.amount
+        );
+
+
+    document.getElementById(
+        "checkoutSetup"
+    ).textContent =
+        formatujCena(
+            payment.setup_amount
+        );
+
+
+    document.getElementById(
+        "checkoutTotal"
+    ).textContent =
+        formatujCena(
+            Number(payment.amount) +
+            Number(payment.setup_amount)
+        );
+
+
+    document.getElementById(
+        "checkoutOverlay"
+    ).classList.add(
+        "show"
+    );
+}
+
+
+function zamknijCheckoutModal() {
+
+    document.getElementById(
+        "checkoutOverlay"
+    ).classList.remove(
+        "show"
+    );
+}
+
+
+// ======================================================
+// TESTOWE POTWIERDZENIE PŁATNOŚCI
+// ======================================================
+
+async function potwierdzPlatnoscTestowa() {
+
+    if (!aktywnaPlatnosc) {
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "checkoutPayButton"
+        );
+
+
+    try {
+
+        button.disabled =
+            true;
+
+        button.textContent =
+            "Przetwarzanie...";
+
+
+        const response =
+            await fetch(
+                `/api/billing/test-confirm/${aktywnaPlatnosc.id}`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się potwierdzić płatności."
+            );
+        }
+
+
+        alert(
+            "✅ Płatność testowa potwierdzona. Plan został aktywowany."
+        );
+
+
+        window.location.reload();
+
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+
+
+    } finally {
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "Zapłać testowo";
+    }
+}
+// ======================================================
+// HISTORIA PŁATNOŚCI
+// ======================================================
+
+async function pobierzPlatnosci() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/company/payments",
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się pobrać płatności."
+            );
+        }
+
+
+        pokazPlatnosci(
+            data.payments || []
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Płatności:",
+            error
+        );
+    }
+}
+
+
+function pokazPlatnosci(
+    payments
+) {
+
+    const container =
+        document.getElementById(
+            "paymentsHistory"
+        );
+
+
+    container.innerHTML = "";
+
+
+    if (!payments.length) {
+
+        container.innerHTML =
+            `
+            <div class="history-empty">
+                Brak płatności.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    payments.forEach(
+        payment => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "history-item";
+
+
+            const suma =
+                Number(payment.amount) +
+                Number(payment.setup_amount);
+
+
+            let status =
+                payment.status;
+
+
+            if (
+                payment.status === "PAID"
+            ) {
+
+                status =
+                    "OPŁACONA";
+
+            } else if (
+                payment.status === "PENDING"
+            ) {
+
+                status =
+                    "OCZEKUJĄCA";
+
+            } else if (
+                payment.status === "CANCELED"
+            ) {
+
+                status =
+                    "ANULOWANA";
+            }
+
+
+            row.innerHTML =
+                `
+                <div>
+
+                    <div class="history-change">
+                        ${payment.plan_code}
+                        · ${formatujCena(suma)}
+                    </div>
+
+                    <div class="history-meta">
+                        ${status}
+                        · ${payment.provider || "-"}
+                    </div>
+
+                </div>
+
+                <div class="history-date">
+                    ${formatujDate(
+                        payment.paid_at ||
+                        payment.created_at
+                    )}
+                </div>
+                `;
+
+
+            container.appendChild(
+                row
+            );
+        }
+    );
+}
+function toggleHistory(
+    id,
+    button
+) {
+
+    const content =
+        document.getElementById(
+            id
+        );
+
+
+    if (!content) {
+        return;
+    }
+
+
+    const collapsed =
+        content.classList.toggle(
+            "collapsed"
+        );
+
+
+    button.classList.toggle(
+        "collapsed",
+        collapsed
+    );
+}
+function podlaczZwijanieHistorii(
+    buttonId,
+    contentId
+) {
+
+    const button =
+        document.getElementById(
+            buttonId
+        );
+
+    const content =
+        document.getElementById(
+            contentId
+        );
+
+
+    if (
+        !button ||
+        !content
+    ) {
+        return;
+    }
+
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            const collapsed =
+                content.classList.toggle(
+                    "collapsed"
+                );
+
+
+            button.classList.toggle(
+                "collapsed",
+                collapsed
+            );
+        }
+    );
+}
+
+
+podlaczZwijanieHistorii(
+    "toggleBillingHistory",
+    "billingHistory"
+);
+
+
+podlaczZwijanieHistorii(
+    "togglePaymentsHistory",
+    "paymentsHistory"
+);
+// ======================================================
+// START
+// ======================================================
+
+pobierzPlan();
+pobierzBilling();
+pobierzPlatnosci();
+
+</script>
+<!-- ================================================== -->
+<!-- TESTOWY CHECKOUT -->
+<!-- ================================================== -->
+
+<div
+    id="checkoutOverlay"
+    class="checkout-overlay">
+
+    <div class="checkout-modal">
+
+        <div class="checkout-icon">
+            💳
+        </div>
+
+        <h2>
+            Podsumowanie zamówienia
+        </h2>
+
+        <div class="checkout-summary">
+
+            <div class="checkout-row">
+                <span>Plan</span>
+                <strong id="checkoutPlan">-</strong>
+            </div>
+
+            <div class="checkout-row">
+                <span>Abonament miesięczny</span>
+                <strong id="checkoutMonthly">-</strong>
+            </div>
+
+            <div class="checkout-row">
+                <span>Wdrożenie</span>
+                <strong id="checkoutSetup">-</strong>
+            </div>
+
+            <div class="checkout-row total">
+                <span>Do zapłaty teraz</span>
+                <strong id="checkoutTotal">-</strong>
+            </div>
+
+        </div>
+
+        <div class="checkout-actions">
+
+            <button
+                class="checkout-secondary"
+                onclick="zamknijCheckoutModal()">
+
+                Anuluj
+
+            </button>
+
+            <button
+                id="checkoutPayButton"
+                class="checkout-primary"
+                onclick="potwierdzPlatnoscTestowa()">
+
+                Zapłać testowo
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Zespół - Lead Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+        }
+
+        button {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .primary {
+            background: #111827;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .card h2 {
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 13px;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 14px 13px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .role {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .role-owner {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .role-admin {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .role-user {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .role-select {
+            width: auto;
+            min-width: 110px;
+            padding: 9px 10px;
+        }
+
+        .status {
+            display: none;
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        @media (max-width: 850px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 900px;
+            }
+        }
+    </style>
+
+
+<style id="TEAM_UPGRADE_MODAL_V1">
+
+.upgrade-overlay {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    background:
+        rgba(17, 24, 39, 0.82);
+
+    z-index: 99999;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+}
+
+.upgrade-overlay.show {
+    display: flex;
+}
+
+.upgrade-modal {
+    width: 100%;
+    max-width: 560px;
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 32px;
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.35);
+
+    text-align: center;
+}
+
+.upgrade-icon {
+    font-size: 52px;
+    margin-bottom: 12px;
+}
+
+.upgrade-modal h2 {
+    margin: 0 0 12px;
+    font-size: 28px;
+}
+
+.upgrade-modal p {
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 22px;
+}
+
+.upgrade-plan-box {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+
+    padding: 18px;
+    border-radius: 12px;
+
+    margin-bottom: 22px;
+}
+
+.upgrade-plan-box strong {
+    display: block;
+
+    font-size: 21px;
+
+    margin-bottom: 6px;
+}
+
+.upgrade-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.upgrade-primary {
+    background: #111827;
+    color: white;
+
+    padding: 13px 20px;
+
+    border: none;
+    border-radius: 9px;
+
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.upgrade-secondary {
+    background: #e5e7eb;
+    color: #111827;
+
+    padding: 13px 20px;
+
+    border: none;
+    border-radius: 9px;
+
+    font-weight: bold;
+    cursor: pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div>
+        <h1>👥 Zespół</h1>
+        <p>Zarządzaj użytkownikami swojej firmy</p>
+    </div>
+
+    <button class="secondary" onclick="wrocDoPanelu()">
+        ← Dashboard
+    </button>
+
+</header>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>➕ Dodaj pracownika</h2>
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Imię</label>
+                <input id="workerName" type="text">
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input id="workerEmail" type="email">
+            </div>
+
+            <div class="form-group">
+                <label>Hasło tymczasowe</label>
+                <input id="workerPassword" type="password">
+            </div>
+
+            <div class="form-group">
+                <label>Rola</label>
+
+                <select id="workerRole">
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+            </div>
+
+        </div>
+
+        <button
+            id="addWorkerButton"
+            class="primary"
+            onclick="dodajPracownika()">
+            ➕ Dodaj pracownika
+        </button>
+
+        <div id="workerStatus" class="status"></div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>Użytkownicy firmy</h2>
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Imię</th>
+                        <th>Email</th>
+                        <th>Rola</th>
+                        <th>Data utworzenia</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+
+                <tbody id="usersBody"></tbody>
+
+            </table>
+
+        </div>
+
+        <div id="emptyUsers" class="empty" style="display:none;">
+            Brak użytkowników.
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let token =
+    localStorage.getItem("leadAnalyzerToken");
+
+if (!token) {
+    window.location.href = "/";
+}
+
+
+function authHeaders() {
+
+    return {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+}
+
+
+// ======================================================
+// LISTA
+// ======================================================
+
+async function pobierzUzytkownikow() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/company/users",
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+        const data =
+            await response.json();
+
+
+        if (response.status === 401) {
+
+            localStorage.removeItem(
+                "leadAnalyzerToken"
+            );
+
+            window.location.href = "/";
+
+            return;
+        }
+
+
+        if (response.status === 403) {
+
+            alert(
+                "Tylko OWNER może zarządzać zespołem."
+            );
+
+            window.location.href = "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się pobrać użytkowników."
+            );
+        }
+
+
+        wyswietlUzytkownikow(
+            data.users || []
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            `❌ ${error.message}`
+        );
+    }
+}
+
+
+// ======================================================
+// WYŚWIETLANIE
+// ======================================================
+
+function wyswietlUzytkownikow(users) {
+
+    const tbody =
+        document.getElementById(
+            "usersBody"
+        );
+
+    tbody.innerHTML = "";
+
+
+    document.getElementById(
+        "emptyUsers"
+    ).style.display =
+        users.length === 0
+            ? "block"
+            : "none";
+
+
+    users.forEach(user => {
+
+        const row =
+            document.createElement(
+                "tr"
+            );
+
+
+        let roleClass =
+            "role-user";
+
+
+        if (user.rola === "OWNER") {
+
+            roleClass =
+                "role-owner";
+
+        } else if (
+            user.rola === "ADMIN"
+        ) {
+
+            roleClass =
+                "role-admin";
+        }
+
+
+        let akcje = "";
+
+
+        if (user.rola === "OWNER") {
+
+            akcje = `
+                <span style="color:#6b7280;">
+                    Konto właściciela
+                </span>
+            `;
+
+        } else {
+
+            akcje = `
+                <div class="actions">
+
+                    <select
+                        id="role-${user.id}"
+                        class="role-select">
+
+                        <option value="USER"
+                            ${user.rola === "USER" ? "selected" : ""}>
+                            USER
+                        </option>
+
+                        <option value="ADMIN"
+                            ${user.rola === "ADMIN" ? "selected" : ""}>
+                            ADMIN
+                        </option>
+
+                    </select>
+
+                    <button
+                        class="secondary"
+                        onclick="zmienRole(${user.id})">
+                        💾 Rola
+                    </button>
+
+                    <button
+                        class="danger"
+                        onclick="usunPracownika(
+                            ${user.id},
+                            '${bezpiecznyTekst(user.imie || user.email)}'
+                        )">
+                        🗑️ Usuń
+                    </button>
+
+                </div>
+            `;
+        }
+
+
+        row.innerHTML = `
+
+            <td>
+                ${user.id}
+            </td>
+
+            <td>
+                ${user.imie || "-"}
+            </td>
+
+            <td>
+                ${user.email}
+            </td>
+
+            <td>
+                <span class="role ${roleClass}">
+                    ${user.rola}
+                </span>
+            </td>
+
+            <td>
+                ${user.data_utworzenia || "-"}
+            </td>
+
+            <td>
+                ${akcje}
+            </td>
+        `;
+
+
+        tbody.appendChild(
+            row
+        );
+    });
+}
+
+
+// ======================================================
+// DODAWANIE
+// ======================================================
+
+async function dodajPracownika() {
+
+    const button =
+        document.getElementById(
+            "addWorkerButton"
+        );
+
+    const status =
+        document.getElementById(
+            "workerStatus"
+        );
+
+
+    const imie =
+        document.getElementById(
+            "workerName"
+        ).value.trim();
+
+    const email =
+        document.getElementById(
+            "workerEmail"
+        ).value.trim();
+
+    const haslo =
+        document.getElementById(
+            "workerPassword"
+        ).value;
+
+    const rola =
+        document.getElementById(
+            "workerRole"
+        ).value;
+
+
+    if (
+        !imie ||
+        !email ||
+        !haslo
+    ) {
+
+        pokazStatus(
+            "❌ Wypełnij wszystkie pola.",
+            false
+        );
+
+        return;
+    }
+
+
+    try {
+
+        button.disabled = true;
+
+        button.textContent =
+            "⏳ Dodaję...";
+
+
+        const response =
+            await fetch(
+                "/api/company/users",
+                {
+                    method: "POST",
+
+                    headers:
+                        authHeaders(),
+
+                    body:
+                        JSON.stringify({
+                            imie,
+                            email,
+                            haslo,
+                            rola
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się dodać pracownika."
+            );
+        }
+
+
+        pokazStatus(
+            `✅ Dodano ${data.user.imie} (${data.user.rola})`,
+            true
+        );
+
+
+        document.getElementById(
+            "workerName"
+        ).value = "";
+
+        document.getElementById(
+            "workerEmail"
+        ).value = "";
+
+        document.getElementById(
+            "workerPassword"
+        ).value = "";
+
+        document.getElementById(
+            "workerRole"
+        ).value = "USER";
+
+
+        await pobierzUzytkownikow();
+
+
+    } catch (error) {
+
+        pokazStatus(
+            `❌ ${error.message}`,
+            false
+        );
+
+
+    } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "➕ Dodaj pracownika";
+    }
+}
+
+
+// ======================================================
+// ZMIANA ROLI
+// ======================================================
+
+async function zmienRole(userId) {
+
+    const select =
+        document.getElementById(
+            `role-${userId}`
+        );
+
+    const rola =
+        select.value;
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/company/users/${userId}/role`,
+                {
+                    method: "PATCH",
+
+                    headers:
+                        authHeaders(),
+
+                    body:
+                        JSON.stringify({
+                            rola
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się zmienić roli."
+            );
+        }
+
+
+        pokazStatus(
+            `✅ Rola zmieniona na ${data.user.rola}`,
+            true
+        );
+
+
+        await pobierzUzytkownikow();
+
+
+    } catch (error) {
+
+        pokazStatus(
+            `❌ ${error.message}`,
+            false
+        );
+    }
+}
+
+
+// ======================================================
+// USUWANIE
+// ======================================================
+
+async function usunPracownika(
+    userId,
+    nazwa
+) {
+
+    const zgoda =
+        confirm(
+            `Na pewno usunąć użytkownika "${nazwa}"?`
+        );
+
+
+    if (!zgoda) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/company/users/${userId}`,
+                {
+                    method: "DELETE",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się usunąć pracownika."
+            );
+        }
+
+
+        pokazStatus(
+            "✅ Pracownik został usunięty.",
+            true
+        );
+
+
+        await pobierzUzytkownikow();
+
+
+    } catch (error) {
+
+        pokazStatus(
+            `❌ ${error.message}`,
+            false
+        );
+    }
+}
+
+
+// ======================================================
+// STATUS
+// ======================================================
+
+function pokazStatus(
+    tekst,
+    sukces
+) {
+
+    const status =
+        document.getElementById(
+            "workerStatus"
+        );
+
+
+    status.className =
+        sukces
+            ? "status show success"
+            : "status show error";
+
+
+    status.textContent =
+        tekst;
+
+
+    setTimeout(
+        () => {
+
+            status.className =
+                "status";
+
+        },
+        3000
+    );
+}
+
+
+// ======================================================
+// BEZPIECZNY TEKST DO ONCLICK
+// ======================================================
+
+function bezpiecznyTekst(tekst) {
+
+    return String(tekst)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'");
+}
+
+
+// ======================================================
+// POWRÓT
+// ======================================================
+
+function wrocDoPanelu() {
+
+    window.location.href = "/";
+}
+
+
+// ======================================================
+// START
+// ======================================================
+
+pobierzUzytkownikow();
+
+</script>
+
+
+
+<div
+    id="upgradeOverlay"
+    class="upgrade-overlay">
+
+    <div class="upgrade-modal">
+
+        <div class="upgrade-icon">
+            🚀
+        </div>
+
+        <h2>
+            Osiągnięto limit planu
+        </h2>
+
+        <p id="upgradeMessage">
+            Twój obecny plan osiągnął limit użytkowników.
+        </p>
+
+        <div class="upgrade-plan-box">
+
+            <strong>
+                Przejdź na PRO
+            </strong>
+
+            <div>
+                do 7 użytkowników i 750 leadów AI miesięcznie
+            </div>
+
+        </div>
+
+        <div class="upgrade-actions">
+
+            <button
+                class="upgrade-primary"
+                onclick="window.location.href='/plans.html'">
+
+                Zobacz plany
+
+            </button>
+
+            <button
+                class="upgrade-secondary"
+                onclick="zamknijUpgradeModal()">
+
+                Zostań przy obecnym planie
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+(function () {
+
+    const originalFetch =
+        window.fetch;
+
+
+    window.fetch =
+        async function (...args) {
+
+            const response =
+                await originalFetch(
+                    ...args
+                );
+
+
+            const clone =
+                response.clone();
+
+
+            try {
+
+                const data =
+                    await clone.json();
+
+
+                if (
+                    response.status === 403 &&
+                    data?.message &&
+                    (
+                        data.message.includes(
+                            "Limit użytkowników"
+                        ) ||
+                        data.message.includes(
+                            "limit użytkowników"
+                        )
+                    )
+                ) {
+
+                    pokazUpgradeModal(
+                        data.message
+                    );
+                }
+
+
+            } catch (error) {
+
+                // Nie każda odpowiedź musi być JSON.
+            }
+
+
+            return response;
+        };
+
+
+    window.pokazUpgradeModal =
+        function (message) {
+
+            const overlay =
+                document.getElementById(
+                    "upgradeOverlay"
+                );
+
+
+            const messageBox =
+                document.getElementById(
+                    "upgradeMessage"
+                );
+
+
+            if (messageBox && message) {
+
+                messageBox.textContent =
+                    message;
+            }
+
+
+            if (overlay) {
+
+                overlay.classList.add(
+                    "show"
+                );
+            }
+        };
+
+
+    window.zamknijUpgradeModal =
+        function () {
+
+            const overlay =
+                document.getElementById(
+                    "upgradeOverlay"
+                );
+
+
+            if (overlay) {
+
+                overlay.classList.remove(
+                    "show"
+                );
+            }
+        };
+
+
+})();
+
+</script>
+
+
+</body>
+</html>

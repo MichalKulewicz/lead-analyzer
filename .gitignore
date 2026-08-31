@@ -1,0 +1,28 @@
+.env
+node_modules/
+# Sekrety
+.env
+.env.*
+
+# Baza danych
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Node
+node_modules/
+
+# Backupy server.js
+server-backup-*.js
+server-before-*.js
+
+# Logi
+*.log
+npm-debug.log*
+
+# System / edytor
+.DS_Store
+Thumbs.db
+# Backupy HTML
+public/*-before-*.html

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Moje leady - Lead Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .summary {
+            background: white;
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        }
+
+        .summary-title {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: bold;
+        }
+
+        .summary-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .leads {
+            display: grid;
+            gap: 16px;
+        }
+
+        .lead {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+            cursor: pointer;
+            transition: transform .15s ease;
+        }
+
+        .lead:hover {
+            transform: translateY(-2px);
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .city {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .details {
+            margin-top: 7px;
+            color: #6b7280;
+        }
+
+        .score {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .badges {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .hot {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .warm {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .cold {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .message {
+            margin-top: 14px;
+            background: #f9fafb;
+            padding: 13px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .empty {
+            background: white;
+            border-radius: 14px;
+            padding: 45px 20px;
+            text-align: center;
+            color: #6b7280;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        }
+
+        .error {
+            display: none;
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .top {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <div>
+        <h1>👤 Moje leady</h1>
+        <p>Klienci przypisani bezpośrednio do Ciebie</p>
+    </div>
+
+    <button
+        class="secondary"
+        onclick="window.location.href='/'">
+        ← Dashboard
+    </button>
+
+</header>
+
+<div class="container">
+
+    <div
+        id="errorBox"
+        class="error">
+    </div>
+
+    <div class="summary">
+
+        <div class="summary-title">
+            PRZYPISANE DO MNIE
+        </div>
+
+        <div
+            id="leadCount"
+            class="summary-number">
+            -
+        </div>
+
+    </div>
+
+    <div
+        id="leads"
+        class="leads">
+    </div>
+
+    <div
+        id="empty"
+        class="empty"
+        style="display:none;">
+
+        Nie masz obecnie żadnych przypisanych leadów.
+
+    </div>
+
+</div>
+
+<script>
+
+const token =
+    localStorage.getItem(
+        "leadAnalyzerToken"
+    );
+
+
+if (!token) {
+    window.location.href = "/";
+}
+
+
+// ======================================================
+// POBIERANIE
+// ======================================================
+
+async function pobierzMojeLeady() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/my-leads",
+                {
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (response.status === 401) {
+
+            localStorage.removeItem(
+                "leadAnalyzerToken"
+            );
+
+            window.location.href = "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się pobrać leadów."
+            );
+        }
+
+
+        document.getElementById(
+            "leadCount"
+        ).textContent =
+            data.count || 0;
+
+
+        wyswietlLeady(
+            data.leads || []
+        );
+
+
+    } catch (error) {
+
+        pokazBlad(
+            error.message
+        );
+    }
+}
+
+
+// ======================================================
+// WYŚWIETLANIE
+// ======================================================
+
+function wyswietlLeady(leady) {
+
+    const box =
+        document.getElementById(
+            "leads"
+        );
+
+    const empty =
+        document.getElementById(
+            "empty"
+        );
+
+
+    box.innerHTML = "";
+
+
+    if (leady.length === 0) {
+
+        empty.style.display =
+            "block";
+
+        return;
+    }
+
+
+    empty.style.display =
+        "none";
+
+
+    leady.forEach(lead => {
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+
+        card.className =
+            "lead";
+
+
+        let badgeClass =
+            "cold";
+
+
+        if (
+            lead.klasyfikacja === "HOT"
+        ) {
+
+            badgeClass =
+                "hot";
+
+        } else if (
+            lead.klasyfikacja === "WARM"
+        ) {
+
+            badgeClass =
+                "warm";
+        }
+
+
+        const budzet =
+            lead.budzet
+                ? Number(
+                    lead.budzet
+                ).toLocaleString(
+                    "pl-PL"
+                )
+                : "-";
+
+
+        card.innerHTML = `
+
+            <div class="top">
+
+                <div>
+
+                    <div class="city">
+
+                        #${lead.id}
+                        ${lead.miasto || "Brak miasta"}
+
+                    </div>
+
+                    <div class="details">
+
+                        Budżet:
+                        ${budzet}
+                        ${lead.waluta || ""}
+
+                    </div>
+
+                    <div class="details">
+
+                        Termin:
+                        ${lead.termin_zakupu || "-"}
+
+                    </div>
+
+                </div>
+
+
+                <div class="score">
+
+                    ${lead.score}/100
+
+                </div>
+
+            </div>
+
+
+            <div class="badges">
+
+                <span
+                    class="badge ${badgeClass}">
+
+                    ${lead.klasyfikacja || "-"}
+
+                </span>
+
+
+                <span
+                    class="badge status">
+
+                    ${lead.status_obslugi || "NOWY"}
+
+                </span>
+
+            </div>
+
+
+            <div class="message">
+
+                ${lead.wiadomosc || ""}
+
+            </div>
+        `;
+
+
+        card.onclick =
+            function () {
+
+                localStorage.setItem(
+                    "openLeadId",
+                    lead.id
+                );
+
+                window.location.href =
+                    "/";
+            };
+
+
+        box.appendChild(
+            card
+        );
+    });
+}
+
+
+// ======================================================
+// BŁĘDY
+// ======================================================
+
+function pokazBlad(tekst) {
+
+    const box =
+        document.getElementById(
+            "errorBox"
+        );
+
+
+    box.style.display =
+        "block";
+
+    box.textContent =
+        `❌ ${tekst}`;
+}
+
+
+// ======================================================
+// START
+// ======================================================
+
+pobierzMojeLeady();
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,2970 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lead Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 430px;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .auth-card h1 {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .auth-card p {
+            color: #6b7280;
+            margin-top: 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 25px 0;
+        }
+
+        .tab {
+            flex: 1;
+            background: #e5e7eb;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab.active {
+            background: #111827;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        button {
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .primary {
+            background: #111827;
+            color: white;
+        }
+
+        .primary:hover {
+            background: #374151;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .full {
+            width: 100%;
+        }
+
+        .status-box {
+            display: none;
+            margin-top: 15px;
+            padding: 13px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status-box.show {
+            display: block;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 18px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header-left p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info {
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .container {
+            max-width: 1350px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .card h3 {
+            margin: 0 0 10px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .hot { color: #dc2626; }
+        .warm { color: #d97706; }
+        .cold { color: #2563eb; }
+
+        .toolbar {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .search {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .filter {
+            background: #e5e7eb;
+        }
+
+        .filter.active {
+            background: #111827;
+            color: white;
+        }
+
+        .leads-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 14px;
+            text-align: left;
+            font-size: 13px;
+            color: #6b7280;
+            background: #f9fafb;
+        }
+
+        td {
+            padding: 15px 14px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        tbody tr {
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .badge,
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-hot {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge-warm {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-cold {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-new {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .status-contacted {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-progress {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-won {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 760px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 14px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            background: #f3f4f6;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: bold;
+        }
+
+        .message {
+            background: #f9fafb;
+            padding: 18px;
+            border-radius: 8px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .history-item {
+            background: #f9fafb;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .empty {
+            padding: 50px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        @media (max-width: 900px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .details,
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .leads-section {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 1050px;
+            }
+        }
+    </style>
+
+
+<style id="LEAD_ANALYZER_ATTENTION_PATCH">
+
+    .attention-dashboard-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px 22px;
+        margin-bottom: 22px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+
+        cursor: pointer;
+
+        border-left: 5px solid #dc2626;
+
+        transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease;
+    }
+
+    .attention-dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    }
+
+    .attention-dashboard-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .attention-dashboard-icon {
+        font-size: 32px;
+    }
+
+    .attention-dashboard-title {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .attention-dashboard-description {
+        font-size: 13px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .attention-dashboard-count {
+        min-width: 58px;
+        height: 58px;
+
+        border-radius: 50%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #fee2e2;
+        color: #b91c1c;
+
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .attention-dashboard-count.zero {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    @media (max-width: 700px) {
+
+        .attention-dashboard-card {
+            align-items: flex-start;
+        }
+
+        .attention-dashboard-count {
+            min-width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+    }
+
+</style>
+
+
+
+<style id="LEAD_ANALYZER_NAVIGATION_V1">
+
+    .main-navigation {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .main-navigation-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 20px;
+
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .nav-button {
+        border: none;
+        background: transparent;
+        color: #374151;
+
+        padding: 10px 13px;
+        border-radius: 8px;
+
+        font-size: 14px;
+        font-weight: bold;
+
+        cursor: pointer;
+
+        transition:
+            background 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .nav-button:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .nav-button.active {
+        background: #111827;
+        color: white;
+    }
+
+    .nav-separator {
+        width: 1px;
+        height: 26px;
+        background: #e5e7eb;
+        margin: 0 4px;
+    }
+
+    @media (max-width: 700px) {
+
+        .main-navigation-inner {
+            padding: 8px 12px;
+        }
+
+        .nav-button {
+            font-size: 13px;
+            padding: 9px 10px;
+        }
+
+        .nav-separator {
+            display: none;
+        }
+    }
+/* ================================================== */
+/* LIMIT LEADÓW - UPGRADE MODAL */
+/* ================================================== */
+
+.lead-limit-overlay {
+    display: none !important;
+
+    position: fixed !important;
+    inset: 0 !important;
+
+    width: 100vw !important;
+    height: 100vh !important;
+
+    background: rgba(17, 24, 39, 0.82) !important;
+
+    z-index: 999999 !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 20px !important;
+
+    overflow: auto !important;
+}
+
+.lead-limit-overlay.show {
+    display: flex !important;
+}
+
+.lead-limit-modal {
+    width: 100% !important;
+    max-width: 560px !important;
+
+    background: white !important;
+
+    border-radius: 18px !important;
+
+    padding: 32px !important;
+
+    text-align: center !important;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.35) !important;
+}
+
+.lead-limit-icon {
+    font-size: 52px !important;
+    margin-bottom: 12px !important;
+}
+
+.lead-limit-modal h2 {
+    margin: 0 0 12px !important;
+    font-size: 28px !important;
+}
+
+.lead-limit-modal p {
+    margin: 0 0 22px !important;
+    color: #6b7280 !important;
+    line-height: 1.6 !important;
+}
+
+.lead-limit-plan {
+    background: #f9fafb !important;
+
+    border: 1px solid #e5e7eb !important;
+
+    border-radius: 12px !important;
+
+    padding: 18px !important;
+
+    margin-bottom: 22px !important;
+}
+
+.lead-limit-plan strong {
+    display: block !important;
+
+    font-size: 21px !important;
+
+    margin-bottom: 7px !important;
+}
+
+.lead-limit-actions {
+    display: flex !important;
+
+    justify-content: center !important;
+
+    gap: 10px !important;
+
+    flex-wrap: wrap !important;
+}
+
+.lead-limit-primary {
+    background: #7c3aed !important;
+    color: white !important;
+
+    padding: 13px 20px !important;
+
+    border: none !important;
+    border-radius: 9px !important;
+
+    font-weight: bold !important;
+    cursor: pointer !important;
+}
+
+.lead-limit-secondary {
+    background: #e5e7eb !important;
+    color: #111827 !important;
+
+    padding: 13px 20px !important;
+
+    border: none !important;
+    border-radius: 9px !important;
+
+    font-weight: bold !important;
+    cursor: pointer !important;
+}
+</style>
+\n</head>
+
+<body>
+
+<!-- AUTORYZACJA -->
+
+<div id="authView" class="auth-wrapper">
+
+    <div class="auth-card">
+
+        <h1>Lead Analyzer</h1>
+        <p>Zaloguj się lub utwórz konto firmy.</p>
+
+        <div class="tabs">
+            <button id="loginTab" class="tab active" onclick="pokazLogin()">
+                Logowanie
+            </button>
+
+            <button id="registerTab" class="tab" onclick="pokazRejestracje()">
+                Rejestracja
+            </button>
+        </div>
+
+        <div id="loginForm">
+
+            <div class="form-group">
+                <label>Email</label>
+                <input id="loginEmail" type="email">
+            </div>
+
+            <div class="form-group">
+                <label>Hasło</label>
+                <input id="loginPassword" type="password">
+            </div>
+
+            <button class="primary full" onclick="zaloguj()">
+                🔐 Zaloguj
+            </button>
+
+            <div id="loginStatus" class="status-box"></div>
+
+        </div>
+
+        <div id="registerForm" class="hidden">
+
+            <div class="form-group">
+                <label>Nazwa firmy</label>
+                <input id="registerCompany" type="text">
+            </div>
+
+            <div class="form-group">
+                <label>Imię</label>
+                <input id="registerName" type="text">
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input id="registerEmail" type="email">
+            </div>
+
+            <div class="form-group">
+                <label>Hasło</label>
+                <input id="registerPassword" type="password">
+            </div>
+
+            <button class="primary full" onclick="zarejestruj()">
+                🏢 Utwórz konto
+            </button>
+
+            <div id="registerStatus" class="status-box"></div>
+
+        </div>
+    </div>
+</div>
+
+<!-- APLIKACJA -->
+
+<div id="appView" class="hidden">
+
+    <header>
+
+        <div class="header-left">
+            <h1>Lead Analyzer</h1>
+            <p id="companyName">Panel firmy</p>
+        </div>
+
+        <div class="header-right">
+
+            <div class="user-info">
+                <div id="userName"></div>
+                <div id="userEmail"></div>
+            </div>
+
+            <button class="secondary" onclick="wyloguj()">
+                Wyloguj
+            </button>
+
+        </div>
+    </header>
+
+<div
+    id="mainNavigation"
+    class="main-navigation"
+    style="display:none;">
+
+    <div
+        id="mainNavigationInner"
+        class="main-navigation-inner">
+    </div>
+
+</div>
+
+
+
+    <div class="container">
+
+        <div class="top-actions">
+            <button class="primary" onclick="otworzDodawanieLeada()">
+                ➕ Dodaj leada
+            </button>
+        </div>
+
+        <div class="stats">
+
+            <div class="card">
+                <h3>🔥 HOT</h3>
+                <div class="number hot" id="hotCount">-</div>
+            </div>
+
+            <div class="card">
+                <h3>🟡 WARM</h3>
+                <div class="number warm" id="warmCount">-</div>
+            </div>
+
+            <div class="card">
+                <h3>🔵 COLD</h3>
+                <div class="number cold" id="coldCount">-</div>
+            </div>
+
+            <div class="card">
+                <h3>👥 WSZYSTKIE</h3>
+                <div class="number" id="totalCount">-</div>
+            </div>
+
+        </div>
+
+        <div class="toolbar">
+
+            <input
+                id="searchInput"
+                class="search"
+                type="text"
+                placeholder="🔎 Szukaj..."
+            >
+
+            <button class="filter active" data-filter="ALL">Wszystkie</button>
+            <button class="filter" data-filter="HOT">🔥 HOT</button>
+            <button class="filter" data-filter="WARM">🟡 WARM</button>
+            <button class="filter" data-filter="COLD">🔵 COLD</button>
+
+            <button class="primary" onclick="pobierzLeady()">
+                🔄 Odśwież
+            </button>
+        </div>
+
+        <div class="leads-section">
+
+            <div class="section-header">
+                <h2>Leady</h2>
+                <span id="resultCount">0 wyników</span>
+            </div>
+
+            <div id="loading" class="empty">
+                Ładowanie leadów...
+            </div>
+
+            <table id="leadsTable" style="display:none;">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Miasto</th>
+                        <th>Budżet</th>
+                        <th>Termin</th>
+                        <th>Score</th>
+                        <th>AI</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="leadsBody"></tbody>
+
+            </table>
+
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LEADA -->
+
+<div id="leadModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h2>Szczegóły leada</h2>
+            <button class="close" onclick="zamknijLeadModal()">×</button>
+        </div>
+
+        <div id="leadSummary" class="details"></div>
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Miasto</label>
+                <input id="editCity">
+            </div>
+
+            <div class="form-group">
+                <label>Budżet</label>
+                <input id="editBudget" type="number">
+            </div>
+
+            <div class="form-group">
+                <label>Waluta</label>
+                <input id="editCurrency">
+            </div>
+
+            <div class="form-group">
+                <label>Termin</label>
+                <input id="editTimeline">
+            </div>
+
+            <div class="form-group">
+                <label>Zainteresowanie</label>
+                <select id="editInterest">
+                    <option value="bardzo wysoki">bardzo wysoki</option>
+                    <option value="wysoki">wysoki</option>
+                    <option value="średni">średni</option>
+                    <option value="niski">niski</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Status obsługi</label>
+                <select id="editStatus">
+                    <option value="NOWY">NOWY</option>
+                    <option value="SKONTAKTOWANO">SKONTAKTOWANO</option>
+                    <option value="W TOKU">W TOKU</option>
+                    <option value="WYGRANY">WYGRANY</option>
+                    <option value="ODRZUCONY">ODRZUCONY</option>
+                </select>
+            </div>
+
+        </div>
+
+        <h3>Wiadomość</h3>
+        <div id="leadMessageView" class="message"></div>
+
+        <div class="action-row">
+
+            <button class="primary" onclick="zapiszEdycje()">
+                💾 Zapisz dane
+            </button>
+
+            <button class="secondary" onclick="zapiszStatus()">
+                📌 Zapisz status
+            </button>
+
+            <button class="secondary" onclick="pobierzHistorie()">
+                🕒 Historia
+            </button>
+
+          <button
+    id="deleteLeadButton"
+    class="danger"
+    onclick="usunLeada()">
+
+    🗑️ Usuń
+
+</button>
+
+        </div>
+
+        <div id="leadActionStatus" class="status-box"></div>
+
+        <div id="historySection" class="hidden">
+            <h3>Historia</h3>
+            <div id="historyList"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- DODAJ LEADA -->
+
+<div id="addLeadModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h2>➕ Dodaj leada</h2>
+            <button class="close" onclick="zamknijDodawanieLeada()">×</button>
+        </div>
+
+        <div class="form-group">
+            <label>Wiadomość klienta</label>
+            <textarea id="newLeadMessage"></textarea>
+        </div>
+
+        <button id="newLeadButton" class="primary full" onclick="dodajLeada()">
+            🤖 Analizuj i dodaj
+        </button>
+
+        <div id="newLeadStatus" class="status-box"></div>
+
+    </div>
+</div>
+<!-- ================================================== -->
+<!-- LIMIT LEADÓW - UPGRADE MODAL -->
+<!-- ================================================== -->
+
+<div
+    id="leadLimitOverlay"
+    class="lead-limit-overlay">
+
+    <div class="lead-limit-modal">
+
+        <div class="lead-limit-icon">
+            🚀
+        </div>
+
+        <h2>
+            Osiągnięto limit leadów
+        </h2>
+
+        <p id="leadLimitMessage">
+            Wykorzystano miesięczny limit analiz AI.
+        </p>
+
+        <div class="lead-limit-plan">
+
+            <strong id="leadLimitPlan">
+                Twój plan
+            </strong>
+
+            <div id="leadLimitUsage">
+                ...
+            </div>
+
+        </div>
+
+
+        <div class="lead-limit-actions">
+
+            <button
+                class="lead-limit-primary"
+                onclick="window.location.href='/plans.html'">
+
+                Zobacz wyższe plany
+
+            </button>
+
+            <button
+                class="lead-limit-secondary"
+                onclick="zamknijLeadLimitModal()">
+
+                Zamknij
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let token = localStorage.getItem("leadAnalyzerToken");
+let wszystkieLeady = [];
+let aktywnyFiltr = "ALL";
+let aktywnyLead = null;
+let aktualnaRola = null;
+
+function authHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+}
+
+function pokazLogin() {
+    document.getElementById("loginForm").classList.remove("hidden");
+    document.getElementById("registerForm").classList.add("hidden");
+    document.getElementById("loginTab").classList.add("active");
+    document.getElementById("registerTab").classList.remove("active");
+}
+
+function pokazRejestracje() {
+    document.getElementById("registerForm").classList.remove("hidden");
+    document.getElementById("loginForm").classList.add("hidden");
+    document.getElementById("registerTab").classList.add("active");
+    document.getElementById("loginTab").classList.remove("active");
+}
+
+async function zaloguj() {
+
+    const status = document.getElementById("loginStatus");
+
+    try {
+
+        const response = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: document.getElementById("loginEmail").value,
+                haslo: document.getElementById("loginPassword").value
+            })
+        });
+
+        const data = await response.json();
+        aktualnaRola = data.user.rola;
+
+        if (!response.ok) {
+            throw new Error(data.message);
+        }
+
+        token = data.token;
+        localStorage.setItem("leadAnalyzerToken", token);
+
+        await uruchomAplikacje();
+
+    } catch (error) {
+
+        status.className = "status-box show status-error";
+        status.textContent = `❌ ${error.message}`;
+    }
+}
+
+async function zarejestruj() {
+
+    const status = document.getElementById("registerStatus");
+
+    try {
+
+        const response = await fetch("/api/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                nazwaFirmy: document.getElementById("registerCompany").value,
+                imie: document.getElementById("registerName").value,
+                email: document.getElementById("registerEmail").value,
+                haslo: document.getElementById("registerPassword").value
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message);
+        }
+
+        token = data.token;
+        localStorage.setItem("leadAnalyzerToken", token);
+
+        await uruchomAplikacje();
+
+    } catch (error) {
+
+        status.className = "status-box show status-error";
+        status.textContent = `❌ ${error.message}`;
+    }
+}
+
+function wyloguj() {
+    token = null;
+    localStorage.removeItem("leadAnalyzerToken");
+
+    document.getElementById("appView").classList.add("hidden");
+    document.getElementById("authView").classList.remove("hidden");
+}
+
+async function uruchomAplikacje() {
+
+    try {
+
+        const response = await fetch(
+            "/api/me",
+            {
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Sesja nieważna."
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        // ==========================================
+        // ZAPIS AKTUALNEJ ROLI
+        // ==========================================
+
+        aktualnaRola =
+            data.user.rola;
+
+
+        // ==========================================
+        // DANE UŻYTKOWNIKA
+        // ==========================================
+
+        document.getElementById(
+            "userName"
+        ).textContent =
+            `${data.user.imie} (${data.user.rola})`;
+
+
+        document.getElementById(
+            "userEmail"
+        ).textContent =
+            data.user.email;
+
+
+        document.getElementById(
+            "companyName"
+        ).textContent =
+            data.user.firma;
+
+
+        // ==========================================
+        // POKAZANIE APLIKACJI
+        // ==========================================
+
+        document.getElementById(
+            "authView"
+        ).classList.add(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "appView"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+        // ==========================================
+        // LEADY
+        // ==========================================
+
+        await pobierzLeady();
+
+
+    } catch (error) {
+
+        console.error(
+            "Uruchamianie aplikacji:",
+            error
+        );
+
+
+        wyloguj();
+    }
+}
+
+function statusClass(status) {
+    if (status === "SKONTAKTOWANO") return "status-contacted";
+    if (status === "W TOKU") return "status-progress";
+    if (status === "WYGRANY") return "status-won";
+    if (status === "ODRZUCONY") return "status-rejected";
+    return "status-new";
+}
+
+async function pobierzLeady() {
+
+    const response = await fetch("/api/leads", {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    if (response.status === 401) {
+        wyloguj();
+        return;
+    }
+
+    const data = await response.json();
+
+    wszystkieLeady = data.leads || [];
+
+    aktualizujStatystyki();
+    wyswietlLeady();
+
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("leadsTable").style.display = "table";
+}
+
+function aktualizujStatystyki() {
+
+    document.getElementById("hotCount").textContent =
+        wszystkieLeady.filter(x => x.klasyfikacja === "HOT").length;
+
+    document.getElementById("warmCount").textContent =
+        wszystkieLeady.filter(x => x.klasyfikacja === "WARM").length;
+
+    document.getElementById("coldCount").textContent =
+        wszystkieLeady.filter(x => x.klasyfikacja === "COLD").length;
+
+    document.getElementById("totalCount").textContent =
+        wszystkieLeady.length;
+}
+
+function wyswietlLeady() {
+
+    const search = document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase();
+
+    let leady = [...wszystkieLeady];
+
+    if (aktywnyFiltr !== "ALL") {
+        leady = leady.filter(
+            x => x.klasyfikacja === aktywnyFiltr
+        );
+    }
+
+    if (search) {
+        leady = leady.filter(lead => {
+            return JSON.stringify(lead)
+                .toLowerCase()
+                .includes(search);
+        });
+    }
+
+    const tbody = document.getElementById("leadsBody");
+    tbody.innerHTML = "";
+
+    leady.forEach(lead => {
+
+        let badgeClass = "badge-cold";
+
+        if (lead.klasyfikacja === "HOT") badgeClass = "badge-hot";
+        if (lead.klasyfikacja === "WARM") badgeClass = "badge-warm";
+
+        const status = lead.status_obslugi || "NOWY";
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${lead.id}</td>
+            <td>${lead.miasto || "-"}</td>
+            <td>${lead.budzet ? Number(lead.budzet).toLocaleString("pl-PL") : "-"} ${lead.waluta || ""}</td>
+            <td>${lead.termin_zakupu || "-"}</td>
+            <td><strong>${lead.score}/100</strong></td>
+            <td><span class="badge ${badgeClass}">${lead.klasyfikacja}</span></td>
+            <td><span class="status-badge ${statusClass(status)}">${status}</span></td>
+        `;
+
+        row.onclick = () => pokazLeada(lead);
+
+        tbody.appendChild(row);
+    });
+
+    document.getElementById("resultCount").textContent =
+        `${leady.length} wyników`;
+}
+
+document.querySelectorAll(".filter").forEach(button => {
+    button.onclick = () => {
+
+        document.querySelectorAll(".filter").forEach(
+            x => x.classList.remove("active")
+        );
+
+        button.classList.add("active");
+        aktywnyFiltr = button.dataset.filter;
+
+        wyswietlLeady();
+    };
+});
+
+document.getElementById("searchInput").addEventListener(
+    "input",
+    wyswietlLeady
+);
+
+function pokazLeada(lead) {
+
+    aktywnyLead = lead;
+
+    document.getElementById("editCity").value = lead.miasto || "";
+    document.getElementById("editBudget").value = lead.budzet ?? "";
+    document.getElementById("editCurrency").value = lead.waluta || "";
+    document.getElementById("editTimeline").value = lead.termin_zakupu || "";
+    document.getElementById("editInterest").value =
+        lead.poziom_zainteresowania || "niski";
+    document.getElementById("editStatus").value =
+        lead.status_obslugi || "NOWY";
+
+    document.getElementById("leadMessageView").textContent =
+        lead.wiadomosc || "";
+
+    document.getElementById("leadSummary").innerHTML = `
+        <div class="detail">
+            <div class="detail-label">ID</div>
+            <div class="detail-value">${lead.id}</div>
+        </div>
+        <div class="detail">
+            <div class="detail-label">AI</div>
+            <div class="detail-value">${lead.klasyfikacja}</div>
+        </div>
+        <div class="detail">
+            <div class="detail-label">Score</div>
+            <div class="detail-value">${lead.score}/100</div>
+        </div>
+        <div class="detail">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">${lead.status_obslugi || "NOWY"}</div>
+        </div>
+    `;
+
+    document.getElementById("historySection").classList.add("hidden");
+    const deleteButton =
+    document.getElementById(
+        "deleteLeadButton"
+    );
+
+if (deleteButton) {
+
+    deleteButton.style.display =
+        aktualnaRola === "USER"
+            ? "none"
+            : "";
+}
+    document.getElementById("leadModal").classList.add("show");
+}
+
+function zamknijLeadModal() {
+    document.getElementById("leadModal").classList.remove("show");
+}
+
+async function zapiszEdycje() {
+
+    const response = await fetch(
+        `/api/leads/${aktywnyLead.id}`,
+        {
+            method: "PATCH",
+            headers: authHeaders(),
+            body: JSON.stringify({
+                miasto: document.getElementById("editCity").value,
+                budzet: document.getElementById("editBudget").value,
+                waluta: document.getElementById("editCurrency").value,
+                termin_zakupu: document.getElementById("editTimeline").value,
+                poziom_zainteresowania:
+                    document.getElementById("editInterest").value
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+        aktywnyLead = data.lead;
+        await pobierzLeady();
+        pokazLeada(data.lead);
+    }
+}
+
+async function zapiszStatus() {
+
+    const response = await fetch(
+        `/api/leads/${aktywnyLead.id}/status`,
+        {
+            method: "PATCH",
+            headers: authHeaders(),
+            body: JSON.stringify({
+                status: document.getElementById("editStatus").value
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+        aktywnyLead = data.lead;
+        await pobierzLeady();
+        pokazLeada(data.lead);
+    }
+}
+
+async function pobierzHistorie() {
+
+    const response = await fetch(
+        `/api/leads/${aktywnyLead.id}/history`,
+        {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        }
+    );
+
+    const data = await response.json();
+
+    const list = document.getElementById("historyList");
+    list.innerHTML = "";
+
+    (data.history || []).forEach(item => {
+
+        const div = document.createElement("div");
+        div.className = "history-item";
+
+        div.textContent =
+            `${item.typ}: ${item.stara_wartosc || "-"} → ${item.nowa_wartosc || "-"} (${item.data_zmiany})`;
+
+        list.appendChild(div);
+    });
+
+    document.getElementById("historySection").classList.remove("hidden");
+}
+
+async function usunLeada() {
+
+    if (!confirm("Na pewno usunąć tego leada?")) return;
+
+    const response = await fetch(
+        `/api/leads/${aktywnyLead.id}`,
+        {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        }
+    );
+
+    if (response.ok) {
+        zamknijLeadModal();
+        await pobierzLeady();
+    }
+}
+
+function otworzDodawanieLeada() {
+    document.getElementById("newLeadMessage").value = "";
+    document.getElementById("addLeadModal").classList.add("show");
+}
+
+function zamknijDodawanieLeada() {
+    document.getElementById("addLeadModal").classList.remove("show");
+}
+function pokazLeadLimitModal(
+    usage
+) {
+
+    const overlay =
+        document.getElementById(
+            "leadLimitOverlay"
+        );
+
+
+    const message =
+        document.getElementById(
+            "leadLimitMessage"
+        );
+
+
+    const plan =
+        document.getElementById(
+            "leadLimitPlan"
+        );
+
+
+    const usageBox =
+        document.getElementById(
+            "leadLimitUsage"
+        );
+
+
+    if (usage) {
+
+        plan.textContent =
+            `Plan ${usage.plan || ""}`;
+
+
+        usageBox.textContent =
+            usage.limit === null
+                ? `${usage.used} leadów wykorzystanych`
+                : `${usage.used} / ${usage.limit} leadów wykorzystanych`;
+
+
+        message.textContent =
+            "Wykorzystałeś limit analiz AI w bieżącym okresie rozliczeniowym. Przejdź na wyższy plan, aby dalej dodawać leady.";
+    }
+
+
+    overlay.classList.add(
+        "show"
+    );
+}
+
+
+function zamknijLeadLimitModal() {
+
+    document.getElementById(
+        "leadLimitOverlay"
+    ).classList.remove(
+        "show"
+    );
+}
+async function dodajLeada() {
+
+    const button =
+        document.getElementById(
+            "newLeadButton"
+        );
+
+
+    const status =
+        document.getElementById(
+            "newLeadStatus"
+        );
+
+
+    try {
+
+        button.disabled = true;
+
+        button.textContent =
+            "🤖 AI analizuje...";
+
+
+        status.className =
+            "status-box";
+
+        status.textContent =
+            "";
+
+
+        const wiadomosc =
+            document.getElementById(
+                "newLeadMessage"
+            ).value.trim();
+
+
+        if (!wiadomosc) {
+
+            throw new Error(
+                "Wpisz wiadomość klienta."
+            );
+        }
+
+
+        const response =
+            await fetch(
+                "/api/leads",
+                {
+                    method: "POST",
+
+                    headers:
+                        authHeaders(),
+
+                    body:
+                        JSON.stringify({
+                            wiadomosc
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        // ==========================================
+        // LIMIT PLANU
+        // ==========================================
+
+        if (
+            response.status === 403 &&
+            data.code ===
+                "PLAN_LEAD_LIMIT_REACHED"
+        ) {
+
+            zamknijDodawanieLeada();
+
+
+            pokazLeadLimitModal(
+                data.usage
+            );
+
+
+            return;
+        }
+
+
+        // ==========================================
+        // INNY BŁĄD
+        // ==========================================
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się dodać leada."
+            );
+        }
+
+
+        // ==========================================
+        // SUKCES
+        // ==========================================
+
+        status.className =
+            "status-box show status-success";
+
+        status.textContent =
+            "✅ Lead został przeanalizowany i dodany.";
+
+
+        document.getElementById(
+            "newLeadMessage"
+        ).value = "";
+
+
+        await pobierzLeady();
+
+
+        setTimeout(
+            () => {
+
+                zamknijDodawanieLeada();
+
+            },
+            300
+        );
+
+
+    } catch (error) {
+
+        status.className =
+            "status-box show status-error";
+
+        status.textContent =
+            `❌ ${error.message}`;
+
+
+    } finally {
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "🤖 Analizuj i dodaj";
+    }
+}
+
+
+if (token) {
+    uruchomAplikacje();
+}
+</script>
+
+
+
+<script>
+
+(function () {
+
+    // ==================================================
+    // TWORZENIE KAFELKA
+    // ==================================================
+
+    function utworzAttentionCard() {
+
+        if (
+            document.getElementById(
+                "dashboardAttentionCard"
+            )
+        ) {
+            return;
+        }
+
+
+        const appView =
+            document.getElementById(
+                "appView"
+            );
+
+
+        if (!appView) {
+            return;
+        }
+
+
+        const container =
+            appView.querySelector(
+                ".container"
+            );
+
+
+        if (!container) {
+            return;
+        }
+
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+
+        card.id =
+            "dashboardAttentionCard";
+
+
+        card.className =
+            "attention-dashboard-card";
+
+
+        card.innerHTML = `
+
+            <div class="attention-dashboard-left">
+
+                <div class="attention-dashboard-icon">
+                    🚨
+                </div>
+
+                <div>
+
+                    <div class="attention-dashboard-title">
+                        Wymagają uwagi
+                    </div>
+
+                    <div
+                        id="attentionDashboardDescription"
+                        class="attention-dashboard-description">
+
+                        Sprawdzam najważniejsze leady...
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div
+                id="attentionDashboardCount"
+                class="attention-dashboard-count">
+
+                -
+
+            </div>
+        `;
+
+
+        card.onclick = function () {
+
+            window.location.href =
+                "/attention.html";
+        };
+
+
+        container.insertBefore(
+            card,
+            container.firstChild
+        );
+    }
+
+
+    // ==================================================
+    // LICZNIK
+    // ==================================================
+
+    async function pobierzLicznikAttention() {
+
+        const token =
+            localStorage.getItem(
+                "leadAnalyzerToken"
+            );
+
+
+        if (!token) {
+            return;
+        }
+
+
+        const countBox =
+            document.getElementById(
+                "attentionDashboardCount"
+            );
+
+
+        const description =
+            document.getElementById(
+                "attentionDashboardDescription"
+            );
+
+
+        if (
+            !countBox ||
+            !description
+        ) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/leads/attention",
+                    {
+                        headers: {
+                            "Authorization":
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+            if (response.status === 401) {
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Błąd pobierania."
+                );
+            }
+
+
+            const count =
+                Number(
+                    data.count || 0
+                );
+
+
+            countBox.textContent =
+                count;
+
+
+            if (count === 0) {
+
+                countBox.classList.add(
+                    "zero"
+                );
+
+                description.textContent =
+                    "Wszystkie najważniejsze leady są obsłużone.";
+
+            } else {
+
+                countBox.classList.remove(
+                    "zero"
+                );
+
+
+                if (count === 1) {
+
+                    description.textContent =
+                        "1 ważny lead nadal czeka na obsługę.";
+
+                } else {
+
+                    description.textContent =
+                        `${count} ważnych leadów nadal czeka na obsługę.`;
+                }
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "Attention dashboard:",
+                error
+            );
+
+
+            countBox.textContent =
+                "!";
+
+
+            description.textContent =
+                "Nie udało się pobrać pilnych leadów.";
+        }
+    }
+
+
+    // ==================================================
+    // OTWIERANIE LEADA Z attention.html
+    // ==================================================
+
+    async function otworzZapisanyLead() {
+
+        const leadId =
+            localStorage.getItem(
+                "openLeadId"
+            );
+
+
+        if (!leadId) {
+            return;
+        }
+
+
+        const token =
+            localStorage.getItem(
+                "leadAnalyzerToken"
+            );
+
+
+        if (!token) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/leads/${leadId}`,
+                    {
+                        headers: {
+                            "Authorization":
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Nie udało się otworzyć leada."
+                );
+            }
+
+
+            // Usuwamy dopiero po poprawnym pobraniu
+            localStorage.removeItem(
+                "openLeadId"
+            );
+
+
+            let proby = 0;
+
+
+            const timer =
+                setInterval(
+                    function () {
+
+                        proby++;
+
+
+                        if (
+                            typeof window.pokazLeada
+                            === "function"
+                        ) {
+
+                            clearInterval(
+                                timer
+                            );
+
+
+                            window.pokazLeada(
+                                data.lead
+                            );
+
+                            return;
+                        }
+
+
+                        if (proby >= 20) {
+
+                            clearInterval(
+                                timer
+                            );
+
+                            console.error(
+                                "Nie znaleziono funkcji pokazLeada()."
+                            );
+                        }
+
+                    },
+                    200
+                );
+
+
+        } catch (error) {
+
+            console.error(
+                "Otwieranie leada:",
+                error
+            );
+        }
+    }
+
+
+    // ==================================================
+    // START
+    // ==================================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            utworzAttentionCard();
+
+
+            setTimeout(
+                pobierzLicznikAttention,
+                500
+            );
+
+
+            setTimeout(
+                otworzZapisanyLead,
+                600
+            );
+
+
+            // Dashboard może pojawić się dopiero po loginie.
+            const appView =
+                document.getElementById(
+                    "appView"
+                );
+
+
+            if (appView) {
+
+                const observer =
+                    new MutationObserver(
+                        function () {
+
+                            if (
+                                !appView.classList.contains(
+                                    "hidden"
+                                )
+                            ) {
+
+                                utworzAttentionCard();
+
+                                pobierzLicznikAttention();
+                            }
+                        }
+                    );
+
+
+                observer.observe(
+                    appView,
+                    {
+                        attributes: true,
+                        attributeFilter: [
+                            "class"
+                        ]
+                    }
+                );
+            }
+
+        }
+    );
+
+
+    // Udostępniamy odświeżenie licznika
+    window.odswiezAttentionDashboard =
+        pobierzLicznikAttention;
+
+})();
+
+</script>
+
+
+
+
+
+<!-- OLD_USER_UI_DISABLED_V1
+     Stary system USER UI został usunięty.
+     Role i nawigacja są obsługiwane przez nowy system.
+-->
+
+
+
+\n
+
+<script>
+
+(function () {
+
+    let navRole = null;
+
+
+    // ==================================================
+    // ELEMENTY MENU
+    // ==================================================
+
+    const MENU = {
+
+        dashboard: {
+            label: "🏠 Dashboard",
+            href: "/"
+        },
+
+        myLeads: {
+            label: "👤 Moje leady",
+            href: "/my-leads.html"
+        },
+
+        attention: {
+            label: "🚨 Wymagają uwagi",
+            href: "/attention.html"
+        },
+
+        team: {
+            label: "👥 Zespół",
+            href: "/team.html"
+        },
+
+        assignments: {
+            label: "📌 Przypisania",
+            href: "/assignments.html"
+        },
+
+        integrations: {
+            label: "🔌 Integracje",
+            href: "/integrations.html"
+        },
+
+               settings: {
+            label: "⚙️ Ustawienia",
+            href: "/settings.html"
+        },
+
+        billing: {
+            label: "💳 Plan i rozliczenia",
+            href: "/plans.html"
+        },
+
+        account: {
+            label: "🔐 Moje konto",
+            href: "/account.html"
+        }
+    };
+
+
+    // ==================================================
+    // MENU WG ROLI
+    // ==================================================
+
+    function pobierzMenuDlaRoli(
+        rola
+    ) {
+
+if (rola === "OWNER") {
+
+    return [
+        MENU.dashboard,
+        MENU.attention,
+        MENU.team,
+        MENU.assignments,
+        MENU.integrations,
+        MENU.settings,
+        MENU.billing,
+        MENU.account
+    ];
+}
+
+
+        if (rola === "ADMIN") {
+
+            return [
+                MENU.dashboard,
+                MENU.attention,
+                MENU.assignments,
+                MENU.account
+            ];
+        }
+
+
+        return [
+            MENU.dashboard,
+            MENU.myLeads,
+            MENU.attention,
+            MENU.account
+        ];
+    }
+
+
+    // ==================================================
+    // AKTYWNA STRONA
+    // ==================================================
+
+    function czyAktywny(
+        href
+    ) {
+
+        const path =
+            window.location.pathname;
+
+
+        if (
+            href === "/" &&
+            (
+                path === "/" ||
+                path.endsWith(
+                    "/index.html"
+                )
+            )
+        ) {
+
+            return true;
+        }
+
+
+        return (
+            href !== "/" &&
+            path === href
+        );
+    }
+
+
+    // ==================================================
+    // RENDER MENU
+    // ==================================================
+
+    function renderNavigation(
+        rola
+    ) {
+
+        navRole =
+            rola;
+
+
+        const nav =
+            document.getElementById(
+                "mainNavigation"
+            );
+
+
+        const inner =
+            document.getElementById(
+                "mainNavigationInner"
+            );
+
+
+        if (
+            !nav ||
+            !inner
+        ) {
+            return;
+        }
+
+
+        const items =
+            pobierzMenuDlaRoli(
+                rola
+            );
+
+
+        inner.innerHTML =
+            "";
+
+
+        items.forEach(
+            function (item) {
+
+                const button =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                button.className =
+                    "nav-button";
+
+
+                if (
+                    czyAktywny(
+                        item.href
+                    )
+                ) {
+
+                    button.classList.add(
+                        "active"
+                    );
+                }
+
+
+                button.textContent =
+                    item.label;
+
+
+                button.onclick =
+                    function () {
+
+                        window.location.href =
+                            item.href;
+                    };
+
+
+                inner.appendChild(
+                    button
+                );
+            }
+        );
+
+
+        nav.style.display =
+            "block";
+    }
+
+
+    // ==================================================
+    // POBRANIE ROLI
+    // ==================================================
+
+    async function inicjalizujNavigation() {
+
+        const token =
+            localStorage.getItem(
+                "leadAnalyzerToken"
+            );
+
+
+        if (!token) {
+
+            ukryjNavigation();
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/me",
+                    {
+                        headers: {
+                            "Authorization":
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                ukryjNavigation();
+
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const rola =
+                data.user?.rola;
+
+
+            if (!rola) {
+
+                ukryjNavigation();
+
+                return;
+            }
+
+
+            renderNavigation(
+                rola
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Navigation:",
+                error
+            );
+
+
+            ukryjNavigation();
+        }
+    }
+
+
+    // ==================================================
+    // UKRYWANIE
+    // ==================================================
+
+    function ukryjNavigation() {
+
+        const nav =
+            document.getElementById(
+                "mainNavigation"
+            );
+
+
+        if (nav) {
+
+            nav.style.display =
+                "none";
+        }
+    }
+
+
+    // ==================================================
+    // OBSERWUJ LOGOWANIE / WYLOGOWANIE
+    // ==================================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            inicjalizujNavigation();
+
+
+            const appView =
+                document.getElementById(
+                    "appView"
+                );
+
+
+            if (appView) {
+
+                const observer =
+                    new MutationObserver(
+                        function () {
+
+                            if (
+                                appView.classList.contains(
+                                    "hidden"
+                                )
+                            ) {
+
+                                ukryjNavigation();
+
+                            } else {
+
+                                inicjalizujNavigation();
+                            }
+                        }
+                    );
+
+
+                observer.observe(
+                    appView,
+                    {
+                        attributes: true,
+                        attributeFilter: [
+                            "class"
+                        ]
+                    }
+                );
+            }
+
+        }
+    );
+
+
+    window.odswiezNavigation =
+        inicjalizujNavigation;
+
+})();
+
+</script>
+
+\n
+
+<script id="LEAD_ANALYZER_ROLE_UI_FIX_V2">
+
+(function () {
+
+    let ostatniaRola = null;
+
+
+    const menuMap = {
+
+                OWNER: [
+            ["🏠 Dashboard", "/"],
+            ["🚨 Wymagają uwagi", "/attention.html"],
+            ["👥 Zespół", "/team.html"],
+            ["📌 Przypisania", "/assignments.html"],
+            ["🔌 Integracje", "/integrations.html"],
+            ["⚙️ Ustawienia", "/settings.html"],
+            ["💳 Plan i rozliczenia", "/plans.html"],
+            ["🔐 Moje konto", "/account.html"]
+        ],
+
+        ADMIN: [
+            ["🏠 Dashboard", "/"],
+            ["🚨 Wymagają uwagi", "/attention.html"],
+            ["📌 Przypisania", "/assignments.html"],
+            ["🔐 Moje konto", "/account.html"]
+        ],
+
+        USER: [
+            ["🏠 Dashboard", "/"],
+            ["👤 Moje leady", "/my-leads.html"],
+            ["🚨 Wymagają uwagi", "/attention.html"],
+            ["🔐 Moje konto", "/account.html"]
+        ]
+    };
+
+
+    function renderMenu(rola) {
+
+        const nav =
+            document.getElementById(
+                "mainNavigation"
+            );
+
+        const inner =
+            document.getElementById(
+                "mainNavigationInner"
+            );
+
+
+        if (!nav || !inner) {
+            return;
+        }
+
+
+        const items =
+            menuMap[rola] ||
+            menuMap.USER;
+
+
+        inner.innerHTML = "";
+
+
+        items.forEach(item => {
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.className =
+                "nav-button";
+
+
+            button.textContent =
+                item[0];
+
+
+            const path =
+                window.location.pathname;
+
+
+            if (
+                item[1] === "/" &&
+                (
+                    path === "/" ||
+                    path.endsWith(
+                        "/index.html"
+                    )
+                )
+            ) {
+
+                button.classList.add(
+                    "active"
+                );
+
+            } else if (
+                path === item[1]
+            ) {
+
+                button.classList.add(
+                    "active"
+                );
+            }
+
+
+            button.onclick = () => {
+
+                window.location.href =
+                    item[1];
+            };
+
+
+            inner.appendChild(
+                button
+            );
+        });
+
+
+        nav.style.display =
+            "block";
+    }
+
+
+    function znajdzDodajLeada() {
+
+        const buttons =
+            document.querySelectorAll(
+                "button"
+            );
+
+
+        for (
+            const button
+            of buttons
+        ) {
+
+            const tekst =
+                String(
+                    button.textContent || ""
+                )
+                .toLowerCase();
+
+
+            if (
+                tekst.includes(
+                    "dodaj leada"
+                )
+            ) {
+
+                return button;
+            }
+        }
+
+
+        return null;
+    }
+
+
+    function ustawElementyRoli(
+        rola
+    ) {
+
+        renderMenu(
+            rola
+        );
+
+
+        const mojeLeady =
+            document.getElementById(
+                "myLeadsUserButton"
+            );
+
+
+        const dodajLeada =
+            znajdzDodajLeada();
+
+
+        if (
+            rola === "USER"
+        ) {
+
+            if (dodajLeada) {
+
+                dodajLeada.style.display =
+                    "none";
+            }
+
+
+        } else {
+
+            // OWNER / ADMIN nie potrzebują
+            // wiszącego przycisku "Moje leady"
+
+            if (mojeLeady) {
+
+                mojeLeady.remove();
+            }
+
+
+            if (dodajLeada) {
+
+                dodajLeada.style.display =
+                    "";
+            }
+        }
+    }
+
+
+    async function sprawdzRole() {
+
+        const token =
+            localStorage.getItem(
+                "leadAnalyzerToken"
+            );
+
+
+        if (!token) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/me",
+                    {
+                        headers: {
+                            "Authorization":
+                                `Bearer ${token}`
+                        }
+                    }
+                );
+
+
+            if (!response.ok) {
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const rola =
+                data.user?.rola;
+
+
+            if (!rola) {
+                return;
+            }
+
+
+            ostatniaRola =
+                rola;
+
+
+            ustawElementyRoli(
+                rola
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "ROLE UI FIX:",
+                error
+            );
+        }
+    }
+
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            setTimeout(
+                sprawdzRole,
+                300
+            );
+
+
+            setTimeout(
+                sprawdzRole,
+                1000
+            );
+
+
+            const appView =
+                document.getElementById(
+                    "appView"
+                );
+
+
+            if (appView) {
+
+                const observer =
+                    new MutationObserver(
+                        function () {
+
+                            if (
+                                !appView.classList.contains(
+                                    "hidden"
+                                )
+                            ) {
+
+                                setTimeout(
+                                    sprawdzRole,
+                                    100
+                                );
+                            }
+                        }
+                    );
+
+
+                observer.observe(
+                    appView,
+                    {
+                        attributes: true,
+                        attributeFilter: [
+                            "class"
+                        ]
+                    }
+                );
+            }
+
+        }
+    );
+
+
+    window.sprawdzRoleUI =
+        sprawdzRole;
+
+})();
+
+</script>
+
+\n</body>
+</html>
