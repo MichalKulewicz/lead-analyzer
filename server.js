@@ -202,6 +202,7 @@ db.prepare(`
         password_hash TEXT NOT NULL,
         imie TEXT,
         rola TEXT DEFAULT 'USER',
+        token_version INTEGER NOT NULL DEFAULT 0,
         data_utworzenia DATETIME DEFAULT CURRENT_TIMESTAMP,
 
         FOREIGN KEY (company_id)
@@ -209,6 +210,25 @@ db.prepare(`
             ON DELETE CASCADE
     )
 `).run();
+
+// ======================================================
+// TOKEN VERSION
+// Unieważnianie starych sesji JWT
+// ======================================================
+
+const userColumns = db
+    .prepare("PRAGMA table_info(users)")
+    .all()
+    .map(column => column.name);
+
+
+if (!userColumns.includes("token_version")) {
+
+    db.prepare(`
+        ALTER TABLE users
+        ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0
+    `).run();
+}
 
 
 // ======================================================
@@ -312,7 +332,9 @@ function utworzToken(user) {
             userId: user.id,
             companyId: user.company_id,
             email: user.email,
-            rola: user.rola
+            rola: user.rola,
+            tokenVersion:
+                user.token_version ?? 0
         },
         process.env.JWT_SECRET,
         {
@@ -347,15 +369,80 @@ function wymagajLogowania(req, res, next) {
 
     try {
 
-        const dane =
-            jwt.verify(
-                token,
-                process.env.JWT_SECRET
-            );
+       const dane =
+    jwt.verify(
+        token,
+        process.env.JWT_SECRET
+    );
 
-        req.user = dane;
 
-        next();
+const aktualnyUser =
+    db.prepare(`
+        SELECT
+            id,
+            company_id,
+            email,
+            rola,
+            token_version
+
+        FROM users
+
+        WHERE id = ?
+    `).get(
+        dane.userId
+    );
+
+
+if (!aktualnyUser) {
+
+    return res.status(401).json({
+        success: false,
+        message:
+            "Użytkownik nie istnieje."
+    });
+}
+
+
+const tokenVersion =
+    dane.tokenVersion ?? 0;
+
+
+if (
+    tokenVersion !==
+    aktualnyUser.token_version
+) {
+
+    return res.status(401).json({
+        success: false,
+        code:
+            "SESSION_INVALIDATED",
+        message:
+            "Sesja została unieważniona. Zaloguj się ponownie."
+    });
+}
+
+
+req.user = {
+    ...dane,
+
+    userId:
+        aktualnyUser.id,
+
+    companyId:
+        aktualnyUser.company_id,
+
+    email:
+        aktualnyUser.email,
+
+    rola:
+        aktualnyUser.rola,
+
+    tokenVersion:
+        aktualnyUser.token_version
+};
+
+
+next();
 
     } catch (error) {
 
@@ -2978,10 +3065,22 @@ app.post(
 
         try {
 
-            const wiadomosc =
-                String(
-                    req.body.wiadomosc || ""
-                ).trim();
+         if (
+    typeof req.body.wiadomosc !== "string"
+) {
+
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Pole wiadomosc musi być tekstem."
+        });
+}
+
+
+const wiadomosc =
+    req.body.wiadomosc.trim();
 
             const limit =
                 sprawdzLimitLeadowFirmy(
@@ -3061,10 +3160,22 @@ app.post(
 
         try {
 
-            const wiadomosc =
-                String(
-                    req.body.wiadomosc || ""
-                ).trim();
+           if (
+    typeof req.body.wiadomosc !== "string"
+) {
+
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Pole wiadomosc musi być tekstem."
+        });
+}
+
+
+const wiadomosc =
+    req.body.wiadomosc.trim();
 
 
             if (!wiadomosc) {
@@ -4758,14 +4869,18 @@ app.patch(
             // ZAPIS
             // ==========================================
 
-            db.prepare(`
-                UPDATE users
-                SET ${passwordColumn} = ?
-                WHERE id = ?
-            `).run(
-                newHash,
-                user.id
-            );
+          db.prepare(`
+    UPDATE users
+
+    SET
+        ${passwordColumn} = ?,
+        token_version = token_version + 1
+
+    WHERE id = ?
+`).run(
+    newHash,
+    user.id
+);
 
 
             console.log(
