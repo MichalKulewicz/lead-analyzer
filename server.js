@@ -6,7 +6,10 @@ const OpenAI = require("openai");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { rateLimit } = require("express-rate-limit");
+const {
+    rateLimit,
+    ipKeyGenerator
+} = require("express-rate-limit");
 
 const app = express();
 const PORT = 3000;
@@ -16,13 +19,34 @@ const PORT = 3000;
 // KONFIGURACJA
 // ======================================================
 
-if (!process.env.JWT_SECRET) {
-    console.error("❌ Brak JWT_SECRET w .env");
+if (
+    !process.env.JWT_SECRET ||
+    process.env.JWT_SECRET.length < 32
+) {
+
+    console.error(
+        "❌ JWT_SECRET musi mieć minimum 32 znaki."
+    );
+
     process.exit(1);
 }
 
 if (!process.env.OPENAI_API_KEY) {
+
     console.error("❌ Brak OPENAI_API_KEY w .env");
+
+    process.exit(1);
+}
+
+if (
+    process.env.NODE_ENV === "production" &&
+    process.env.BILLING_TEST_MODE === "true"
+) {
+
+    console.error(
+        "CRITICAL: BILLING_TEST_MODE nie może działać na produkcji."
+    );
+
     process.exit(1);
 }
 
@@ -89,13 +113,37 @@ const externalLeadsLimiter = rateLimit({
             return `company:${req.company.id}`;
         }
 
-        return req.ip;
+        return ipKeyGenerator(req.ip);
     },
 
     message: {
         success: false,
         message:
             "Przekroczono limit żądań API. Spróbuj ponownie za chwilę."
+    }
+});
+const internalLeadsLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 20,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+
+    keyGenerator: (req) => {
+
+        if (
+            req.user &&
+            req.user.userId
+        ) {
+            return `user:${req.user.userId}`;
+        }
+
+        return ipKeyGenerator(req.ip);
+    },
+
+    message: {
+        success: false,
+        message:
+            "Zbyt wiele analiz. Spróbuj ponownie za chwilę."
     }
 });
 
@@ -403,8 +451,18 @@ if (!aktualnyUser) {
 }
 
 
+if (!Number.isInteger(dane.tokenVersion)) {
+
+    return res.status(401).json({
+        success: false,
+        code: "SESSION_INVALIDATED",
+        message:
+            "Sesja jest nieaktualna. Zaloguj się ponownie."
+    });
+}
+
 const tokenVersion =
-    dane.tokenVersion ?? 0;
+    dane.tokenVersion;
 
 
 if (
@@ -1072,44 +1130,37 @@ app.post(
 
         try {
 
-            const nazwaFirmy =
-                String(
-                    req.body.nazwaFirmy || ""
-                ).trim();
+if (
+    typeof req.body.nazwaFirmy !== "string" ||
+    typeof req.body.imie !== "string" ||
+    typeof req.body.email !== "string" ||
+    typeof req.body.haslo !== "string"
+) {
 
-            const imie =
-                String(
-                    req.body.imie || ""
-                ).trim();
-
-            const email =
-                String(
-                    req.body.email || ""
-                )
-                .trim()
-                .toLowerCase();
-
-            const haslo =
-                String(
-                    req.body.haslo || ""
-                );
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Nieprawidłowy format danych."
+        });
+}
 
 
-            if (
-                !nazwaFirmy ||
-                !imie ||
-                !email ||
-                !haslo
-            ) {
+const nazwaFirmy =
+    req.body.nazwaFirmy.trim();
 
-                return res
-                    .status(400)
-                    .json({
-                        success: false,
-                        message:
-                            "Wypełnij wszystkie pola."
-                    });
-            }
+const imie =
+    req.body.imie.trim();
+
+const email =
+    req.body.email
+        .trim()
+        .toLowerCase();
+
+const haslo =
+    req.body.haslo;
+            
 
 
             if (!poprawnyEmail(email)) {
@@ -1606,30 +1657,41 @@ app.post(
 
 
 
-            const imie =
-                String(
-                    req.body.imie || ""
-                ).trim();
+           if (
+    typeof req.body.imie !== "string" ||
+    typeof req.body.email !== "string" ||
+    typeof req.body.haslo !== "string" ||
+    (
+        req.body.rola !== undefined &&
+        typeof req.body.rola !== "string"
+    )
+) {
 
-            const email =
-                String(
-                    req.body.email || ""
-                )
-                .trim()
-                .toLowerCase();
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Nieprawidłowy format danych."
+        });
+}
 
-            const haslo =
-                String(
-                    req.body.haslo || ""
-                );
 
-            const rola =
-                String(
-                    req.body.rola || "USER"
-                )
-                .trim()
-                .toUpperCase();
+const imie =
+    req.body.imie.trim();
 
+const email =
+    req.body.email
+        .trim()
+        .toLowerCase();
+
+const haslo =
+    req.body.haslo;
+
+const rola =
+    (req.body.rola || "USER")
+        .trim()
+        .toUpperCase();
 
             if (
                 !imie ||
@@ -1854,14 +1916,17 @@ app.patch(
             }
 
 
-            db.prepare(`
-                UPDATE users
-                SET rola = ?
-                WHERE id = ?
-            `).run(
-                nowaRola,
-                id
-            );
+          db.prepare(`
+    UPDATE users
+    SET rola = ?
+    WHERE
+        id = ?
+        AND company_id = ?
+`).run(
+    nowaRola,
+    id,
+    req.user.companyId
+);
 
 
             const aktualny =
@@ -1961,10 +2026,15 @@ app.delete(
             }
 
 
-            db.prepare(`
-                DELETE FROM users
-                WHERE id = ?
-            `).run(id);
+           db.prepare(`
+    DELETE FROM users
+    WHERE
+        id = ?
+        AND company_id = ?
+`).run(
+    id,
+    req.user.companyId
+);
 
 
             res.json({
@@ -2266,7 +2336,7 @@ app.get(
 app.get(
     "/api/leads",
     wymagajLogowania,
-    (req, res, next) => {
+    async (req, res, next) => {
 
         try {
 
@@ -3061,6 +3131,7 @@ app.get(
 app.post(
     "/api/leads",
     wymagajLogowania,
+    internalLeadsLimiter,
     async (req, res) => {
 
         try {
@@ -3081,6 +3152,30 @@ app.post(
 
 const wiadomosc =
     req.body.wiadomosc.trim();
+
+
+if (wiadomosc.length > 5000) {
+
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Wiadomość może mieć maksymalnie 5000 znaków."
+        });
+}
+
+
+if (!wiadomosc) {
+
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Wiadomość jest wymagana."
+        });
+}
 
             const limit =
                 sprawdzLimitLeadowFirmy(
@@ -3123,6 +3218,20 @@ const wiadomosc =
                     wiadomosc
                 );
 
+                const limitPoAnalizie =
+    sprawdzLimitLeadowFirmy(
+        req.user.companyId
+    );
+
+if (!limitPoAnalizie.allowed) {
+
+    return res.status(403).json({
+        success: false,
+        code: "PLAN_LEAD_LIMIT_REACHED",
+        message:
+            "Limit leadów został osiągnięty."
+    });
+}
 
             const lead =
                 zapiszLeadaDoFirmy(
@@ -3178,7 +3287,19 @@ const wiadomosc =
     req.body.wiadomosc.trim();
 
 
-            if (!wiadomosc) {
+if (wiadomosc.length > 5000) {
+
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Wiadomość może mieć maksymalnie 5000 znaków."
+        });
+}
+
+
+if (!wiadomosc) {
 
                 return res
                     .status(400)
@@ -3217,7 +3338,21 @@ const wiadomosc =
                 await analizujWiadomosc(
                     wiadomosc
                 );
+            
+            const limitPoAnalizie =
+    sprawdzLimitLeadowFirmy(
+        req.company.id
+    );
 
+if (!limitPoAnalizie.allowed) {
+
+    return res.status(403).json({
+        success: false,
+        code: "PLAN_LEAD_LIMIT_REACHED",
+        message:
+            "Limit leadów został osiągnięty."
+    });
+}
 
             const lead =
                 zapiszLeadaDoFirmy(
@@ -3283,7 +3418,31 @@ app.patch(
                 });
         }
 
+const polaTekstowe = [
+    "miasto",
+    "waluta",
+    "termin_zakupu",
+    "poziom_zainteresowania"
+];
 
+
+for (const pole of polaTekstowe) {
+
+    if (
+        req.body[pole] !== undefined &&
+        req.body[pole] !== null &&
+        typeof req.body[pole] !== "string"
+    ) {
+
+        return res
+            .status(400)
+            .json({
+                success: false,
+                message:
+                    `Pole ${pole} musi być tekstem.`
+            });
+    }
+}
         const miasto =
             req.body.miasto ??
             lead.miasto;
@@ -3307,6 +3466,19 @@ app.patch(
 
             } else {
 
+                if (
+    typeof req.body.budzet !== "number" &&
+    typeof req.body.budzet !== "string"
+) {
+
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Budżet musi być liczbą."
+        });
+}
                 budzet =
                     Number(
                         req.body.budzet
@@ -4666,28 +4838,26 @@ app.patch(
                 newPassword
             } = req.body;
 
+if (
+    typeof currentPassword !== "string" ||
+    typeof newPassword !== "string" ||
+    !currentPassword ||
+    !newPassword
+) {
 
-            if (
-                !currentPassword ||
-                !newPassword
-            ) {
-
-                return res
-                    .status(400)
-                    .json({
-
-                        success: false,
-
-                        message:
-                            "Podaj obecne i nowe hasło."
-                    });
-            }
+    return res
+        .status(400)
+        .json({
+            success: false,
+            message:
+                "Podaj prawidłowe obecne i nowe hasło."
+        });
+}
 
 
-            if (
-                typeof newPassword !== "string" ||
-                newPassword.length < 8
-            ) {
+          if (
+    newPassword.length < 8
+) {
 
                 return res
                     .status(400)
@@ -4798,73 +4968,71 @@ app.patch(
             // USTALENIE KOLUMNY
             // ==========================================
 
-            const columns =
-                db.prepare(
-                    "PRAGMA table_info(users)"
-                ).all();
+           const columns =
+    db.prepare(
+        "PRAGMA table_info(users)"
+    ).all();
 
 
-            const columnNames =
-                columns.map(
-                    column => column.name
-                );
+const columnNames =
+    columns.map(
+        column => column.name
+    );
 
 
-            let passwordColumn = null;
+let passwordColumn = null;
 
 
-            if (
-                columnNames.includes(
-                    "haslo_hash"
-                )
-            ) {
+if (
+    columnNames.includes(
+        "haslo_hash"
+    )
+) {
 
-                passwordColumn =
-                    "haslo_hash";
+    passwordColumn =
+        "haslo_hash";
 
-            } else if (
-                columnNames.includes(
-                    "haslo"
-                )
-            ) {
+} else if (
+    columnNames.includes(
+        "haslo"
+    )
+) {
 
-                passwordColumn =
-                    "haslo";
+    passwordColumn =
+        "haslo";
 
-            } else if (
-                columnNames.includes(
-                    "password_hash"
-                )
-            ) {
+} else if (
+    columnNames.includes(
+        "password_hash"
+    )
+) {
 
-                passwordColumn =
-                    "password_hash";
+    passwordColumn =
+        "password_hash";
 
-            } else if (
-                columnNames.includes(
-                    "password"
-                )
-            ) {
+} else if (
+    columnNames.includes(
+        "password"
+    )
+) {
 
-                passwordColumn =
-                    "password";
-            }
-
-
-            if (!passwordColumn) {
-
-                return res
-                    .status(500)
-                    .json({
-
-                        success: false,
-
-                        message:
-                            "Nie znaleziono kolumny hasła."
-                    });
-            }
+    passwordColumn =
+        "password";
+}
 
 
+if (!passwordColumn) {
+
+    return res
+        .status(500)
+        .json({
+
+            success: false,
+
+            message:
+                "Nie znaleziono kolumny hasła."
+        });
+}
             // ==========================================
             // ZAPIS
             // ==========================================
@@ -4918,7 +5086,6 @@ app.patch(
         }
     }
 );
-
 
 // ======================================================
 // PLAN FIRMY / WYKORZYSTANIE LIMITÓW
