@@ -766,9 +766,9 @@
                 <input id="loginPassword" type="password">
             </div>
 
-            <button class="primary full" onclick="zaloguj()">
-                🔐 Zaloguj
-            </button>
+          <button id="loginButton" class="primary full" onclick="zaloguj()">
+    🔐 Zaloguj
+</button>
 
             <div id="loginStatus" class="status-box"></div>
 
@@ -796,9 +796,9 @@
                 <input id="registerPassword" type="password">
             </div>
 
-            <button class="primary full" onclick="zarejestruj()">
-                🏢 Utwórz konto
-            </button>
+           <button id="registerButton" class="primary full" onclick="zarejestruj()">
+    🏢 Utwórz konto
+</button>
 
             <div id="registerStatus" class="status-box"></div>
 
@@ -1139,76 +1139,195 @@ function pokazRejestracje() {
 
 async function zaloguj() {
 
-    const status = document.getElementById("loginStatus");
+    const status =
+        document.getElementById(
+            "loginStatus"
+        );
+
+    const button =
+        document.getElementById(
+            "loginButton"
+        );
 
     try {
 
-        const response = await fetch("/api/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: document.getElementById("loginEmail").value,
-                haslo: document.getElementById("loginPassword").value
-            })
-        });
+        button.disabled = true;
+        button.textContent =
+            "🔐 Logowanie...";
 
-        const data = await response.json();
-        aktualnaRola = data.user.rola;
+        const response =
+            await fetch(
+                "/api/login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            email:
+                                document.getElementById(
+                                    "loginEmail"
+                                ).value,
+
+                            haslo:
+                                document.getElementById(
+                                    "loginPassword"
+                                ).value
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
 
         if (!response.ok) {
-            throw new Error(data.message);
+
+            throw new Error(
+                data.message ||
+                "Nie udało się zalogować."
+            );
         }
 
-        token = data.token;
-        localStorage.setItem("leadAnalyzerToken", token);
+
+        aktualnaRola =
+            data.user.rola;
+
+        token =
+            data.token;
+
+        localStorage.setItem(
+            "leadAnalyzerToken",
+            token
+        );
 
         await uruchomAplikacje();
 
+
     } catch (error) {
 
-        status.className = "status-box show status-error";
-        status.textContent = `❌ ${error.message}`;
+        status.className =
+            "status-box show status-error";
+
+        status.textContent =
+            `❌ ${error.message}`;
+
+
+    } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "🔐 Zaloguj";
     }
 }
+
 
 async function zarejestruj() {
 
-    const status = document.getElementById("registerStatus");
+    const status =
+        document.getElementById(
+            "registerStatus"
+        );
+
+    const button =
+        document.getElementById(
+            "registerButton"
+        );
 
     try {
 
-        const response = await fetch("/api/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                nazwaFirmy: document.getElementById("registerCompany").value,
-                imie: document.getElementById("registerName").value,
-                email: document.getElementById("registerEmail").value,
-                haslo: document.getElementById("registerPassword").value
-            })
-        });
+        button.disabled = true;
 
-        const data = await response.json();
+        button.textContent =
+            "🏢 Tworzenie konta...";
+
+
+        const response =
+            await fetch(
+                "/api/register",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            nazwaFirmy:
+                                document.getElementById(
+                                    "registerCompany"
+                                ).value,
+
+                            imie:
+                                document.getElementById(
+                                    "registerName"
+                                ).value,
+
+                            email:
+                                document.getElementById(
+                                    "registerEmail"
+                                ).value,
+
+                            haslo:
+                                document.getElementById(
+                                    "registerPassword"
+                                ).value
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
 
         if (!response.ok) {
-            throw new Error(data.message);
+
+            throw new Error(
+                data.message ||
+                "Nie udało się utworzyć konta."
+            );
         }
 
-        token = data.token;
-        localStorage.setItem("leadAnalyzerToken", token);
+
+        token =
+            data.token;
+
+        localStorage.setItem(
+            "leadAnalyzerToken",
+            token
+        );
 
         await uruchomAplikacje();
 
+
     } catch (error) {
 
-        status.className = "status-box show status-error";
-        status.textContent = `❌ ${error.message}`;
+        status.className =
+            "status-box show status-error";
+
+        status.textContent =
+            `❌ ${error.message}`;
+
+
+    } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "🏢 Utwórz konto";
     }
 }
+
+
 
 function wyloguj() {
     token = null;
@@ -1491,52 +1610,106 @@ function zamknijLeadModal() {
 
 async function zapiszEdycje() {
 
-    const response = await fetch(
-        `/api/leads/${aktywnyLead.id}`,
-        {
-            method: "PATCH",
-            headers: authHeaders(),
-            body: JSON.stringify({
-                miasto: document.getElementById("editCity").value,
-                budzet: document.getElementById("editBudget").value,
-                waluta: document.getElementById("editCurrency").value,
-                termin_zakupu: document.getElementById("editTimeline").value,
-                poziom_zainteresowania:
-                    document.getElementById("editInterest").value
-            })
+    try {
+
+        const response = await fetch(
+            `/api/leads/${aktywnyLead.id}`,
+            {
+                method: "PATCH",
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    miasto:
+                        document.getElementById("editCity").value,
+
+                    budzet:
+                        document.getElementById("editBudget").value,
+
+                    waluta:
+                        document.getElementById("editCurrency").value,
+
+                    termin_zakupu:
+                        document.getElementById("editTimeline").value,
+
+                    poziom_zainteresowania:
+                        document.getElementById("editInterest").value
+                })
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się zapisać zmian."
+            );
         }
-    );
 
-    const data = await response.json();
 
-    if (response.ok) {
         aktywnyLead = data.lead;
+
         await pobierzLeady();
+
         pokazLeada(data.lead);
+
+
+    } catch (error) {
+
+        alert(
+            `Nie udało się zapisać zmian:\n${error.message}`
+        );
     }
 }
+
 
 async function zapiszStatus() {
 
-    const response = await fetch(
-        `/api/leads/${aktywnyLead.id}/status`,
-        {
-            method: "PATCH",
-            headers: authHeaders(),
-            body: JSON.stringify({
-                status: document.getElementById("editStatus").value
-            })
+    try {
+
+        const response = await fetch(
+            `/api/leads/${aktywnyLead.id}/status`,
+            {
+                method: "PATCH",
+                headers: authHeaders(),
+
+                body: JSON.stringify({
+                    status:
+                        document.getElementById("editStatus").value
+                })
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się zmienić statusu."
+            );
         }
-    );
 
-    const data = await response.json();
 
-    if (response.ok) {
         aktywnyLead = data.lead;
+
         await pobierzLeady();
+
         pokazLeada(data.lead);
+
+
+    } catch (error) {
+
+        alert(
+            `Nie udało się zmienić statusu:\n${error.message}`
+        );
     }
 }
+
 
 async function pobierzHistorie() {
 
@@ -1551,13 +1724,18 @@ async function pobierzHistorie() {
 
     const data = await response.json();
 
-    const list = document.getElementById("historyList");
+    const list =
+        document.getElementById("historyList");
+
     list.innerHTML = "";
 
     (data.history || []).forEach(item => {
 
-        const div = document.createElement("div");
-        div.className = "history-item";
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "history-item";
 
         div.textContent =
             `${item.typ}: ${item.stara_wartosc || "-"} → ${item.nowa_wartosc || "-"} (${item.data_zmiany})`;
@@ -1565,26 +1743,66 @@ async function pobierzHistorie() {
         list.appendChild(div);
     });
 
-    document.getElementById("historySection").classList.remove("hidden");
+    document
+        .getElementById("historySection")
+        .classList.remove("hidden");
 }
+
 
 async function usunLeada() {
 
-    if (!confirm("Na pewno usunąć tego leada?")) return;
+    if (
+        !confirm(
+            "Na pewno usunąć tego leada?"
+        )
+    ) {
+        return;
+    }
 
-    const response = await fetch(
-        `/api/leads/${aktywnyLead.id}`,
-        {
-            method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`
+
+    try {
+
+        const response = await fetch(
+            `/api/leads/${aktywnyLead.id}`,
+            {
+                method: "DELETE",
+
+                headers: {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
             }
-        }
-    );
+        );
 
-    if (response.ok) {
+
+        let data = {};
+
+        try {
+            data = await response.json();
+        } catch (_) {
+            // DELETE może zwrócić pustą odpowiedź.
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Nie udało się usunąć leada."
+            );
+        }
+
+
         zamknijLeadModal();
+
         await pobierzLeady();
+
+
+    } catch (error) {
+
+        alert(
+            `Nie udało się usunąć leada:\n${error.message}`
+        );
     }
 }
 
