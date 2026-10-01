@@ -26,3 +26,4 @@ npm-debug.log*
 Thumbs.db
 # Backupy HTML
 public/*-before-*.html
+!.env.example
