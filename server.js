@@ -65,7 +65,7 @@ const client = new OpenAI({
 // MIDDLEWARE
 // ======================================================
 
-app.use(express.json());
+app.use(express.json({ limit: "32kb" }));
 app.use(express.static("public"));
 
 // ======================================================
@@ -1176,14 +1176,14 @@ const haslo =
             }
 
 
-            if (haslo.length < 8) {
+            if (haslo.length < 8 || haslo.length > 128) {
 
                 return res
                     .status(400)
                     .json({
                         success: false,
                         message:
-                            "Hasło musi mieć minimum 8 znaków."
+                            "Hasło musi mieć od 8 do 128 znaków."
                     });
             }
 
@@ -1722,14 +1722,14 @@ const rola =
             }
 
 
-            if (haslo.length < 8) {
+            if (haslo.length < 8 || haslo.length > 128) {
 
                 return res
                     .status(400)
                     .json({
                         success: false,
                         message:
-                            "Hasło musi mieć minimum 8 znaków."
+                            "Hasło musi mieć od 8 do 128 znaków."
                     });
             }
 
@@ -4857,7 +4857,8 @@ if (
 
 
           if (
-    newPassword.length < 8
+    newPassword.length < 8 ||
+    newPassword.length > 128
 ) {
 
                 return res
@@ -4867,7 +4868,7 @@ if (
                         success: false,
 
                         message:
-                            "Nowe hasło musi mieć minimum 8 znaków."
+                            "Nowe hasło musi mieć od 8 do 128 znaków."
                     });
             }
 
@@ -6034,6 +6035,52 @@ app.get(
         }
     }
 );
+
+// ======================================================
+// 404 / GLOBAL ERROR HANDLER
+// ======================================================
+
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Nie znaleziono endpointu."
+    });
+});
+
+app.use((err, req, res, next) => {
+
+    if (process.env.NODE_ENV === "production") {
+        console.error(
+            "Unhandled server error:",
+            err?.message || "Unknown error"
+        );
+    } else {
+        console.error(
+            "Unhandled server error:",
+            err
+        );
+    }
+
+    if (err && err.type === "entity.too.large") {
+        return res.status(413).json({
+            success: false,
+            message: "Request jest zbyt duży."
+        });
+    }
+
+    if (err instanceof SyntaxError && err.status === 400) {
+        return res.status(400).json({
+            success: false,
+            message: "Nieprawidłowy JSON."
+        });
+    }
+
+    return res.status(500).json({
+        success: false,
+        message: "Wewnętrzny błąd serwera."
+    });
+});
+
 app.listen(PORT, () => {
 
     console.log("");
