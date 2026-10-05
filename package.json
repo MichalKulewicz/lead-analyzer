@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "backup": "node backup-db.js"
   }
 }

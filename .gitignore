@@ -27,3 +27,6 @@ Thumbs.db
 # Backupy HTML
 public/*-before-*.html
 !.env.example
+
+# Backupy bazy danych
+backups/
