@@ -105,6 +105,64 @@ const client = new OpenAI({
 // ======================================================
 
 app.use(express.json({ limit: "32kb" }));
+
+
+// ======================================================
+// REQUEST ID / REQUEST LOGGING
+// ======================================================
+
+app.use((req, res, next) => {
+
+    const requestId =
+        crypto.randomUUID();
+
+    req.requestId =
+        requestId;
+
+    res.setHeader(
+        "X-Request-Id",
+        requestId
+    );
+
+
+    const startedAt =
+        Date.now();
+
+
+    res.on("finish", () => {
+
+        const durationMs =
+            Date.now() - startedAt;
+
+        console.log(
+            JSON.stringify({
+                timestamp:
+                    new Date().toISOString(),
+
+                type:
+                    "http_request",
+
+                requestId,
+
+                method:
+                    req.method,
+
+                path:
+                    req.path,
+
+                status:
+                    res.statusCode,
+
+                durationMs
+            })
+        );
+    });
+
+
+    next();
+});
+
+
 app.use(express.static("public"));
 
 // ======================================================
@@ -6090,13 +6148,30 @@ app.use((err, req, res, next) => {
 
     if (process.env.NODE_ENV === "production") {
         console.error(
-            "Unhandled server error:",
-            err?.message || "Unknown error"
+            JSON.stringify({
+                timestamp:
+                    new Date().toISOString(),
+
+                type:
+                    "unhandled_server_error",
+
+                requestId:
+                    req.requestId || null,
+
+                message:
+                    err?.message || "Unknown error"
+            })
         );
     } else {
         console.error(
             "Unhandled server error:",
-            err
+            {
+                requestId:
+                    req.requestId || null,
+
+                error:
+                    err
+            }
         );
     }
 
@@ -6120,7 +6195,8 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(PORT, () => {
+const server =
+    app.listen(PORT, () => {
 
     console.log("");
     console.log("================================");
@@ -6181,3 +6257,176 @@ app.listen(PORT, () => {
     console.log("================================");
     console.log("");
 });
+
+
+// ======================================================
+// PROCESS SAFETY / GRACEFUL SHUTDOWN
+// ======================================================
+
+let isShuttingDown =
+    false;
+
+
+function processLog(
+    type,
+    details = {}
+) {
+
+    const payload = {
+        timestamp:
+            new Date().toISOString(),
+
+        type,
+
+        ...details
+    };
+
+
+    if (NODE_ENV === "production") {
+        console.error(
+            JSON.stringify(payload)
+        );
+
+        return;
+    }
+
+
+    console.error(
+        type,
+        details
+    );
+}
+
+
+function gracefulShutdown(
+    signal,
+    exitCode = 0
+) {
+
+    if (isShuttingDown) {
+        return;
+    }
+
+
+    isShuttingDown =
+        true;
+
+
+    processLog(
+        "shutdown_started",
+        {
+            signal,
+            exitCode
+        }
+    );
+
+
+    const forceTimer =
+        setTimeout(() => {
+
+            processLog(
+                "shutdown_forced",
+                {
+                    signal
+                }
+            );
+
+            process.exit(1);
+
+        }, 10000);
+
+
+    forceTimer.unref();
+
+
+    server.close(error => {
+
+        clearTimeout(
+            forceTimer
+        );
+
+
+        if (error) {
+
+            processLog(
+                "shutdown_error",
+                {
+                    signal,
+
+                    message:
+                        error.message
+                }
+            );
+
+            process.exit(1);
+        }
+
+
+        processLog(
+            "shutdown_complete",
+            {
+                signal
+            }
+        );
+
+
+        process.exit(exitCode);
+    });
+}
+
+
+process.on(
+    "SIGTERM",
+    () => gracefulShutdown("SIGTERM")
+);
+
+
+process.on(
+    "SIGINT",
+    () => gracefulShutdown("SIGINT")
+);
+
+
+process.on(
+    "unhandledRejection",
+    reason => {
+
+        processLog(
+            "unhandled_rejection",
+            {
+                message:
+                    reason instanceof Error
+                        ? reason.message
+                        : String(reason)
+            }
+        );
+
+
+        gracefulShutdown(
+            "unhandledRejection",
+            1
+        );
+    }
+);
+
+
+process.on(
+    "uncaughtException",
+    error => {
+
+        processLog(
+            "uncaught_exception",
+            {
+                message:
+                    error?.message ||
+                    "Unknown error"
+            }
+        );
+
+
+        gracefulShutdown(
+            "uncaughtException",
+            1
+        );
+    }
+);
