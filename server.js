@@ -249,7 +249,12 @@ const internalLeadsLimiter = rateLimit({
 // BAZA
 // ======================================================
 
-const db = new Database("leads.db");
+const DATABASE_PATH =
+    process.env.DATABASE_PATH ||
+    "leads.db";
+
+const db =
+    new Database(DATABASE_PATH);
 
 db.pragma("foreign_keys = ON");
 

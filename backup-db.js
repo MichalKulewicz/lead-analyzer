@@ -3,7 +3,14 @@ const path = require("path");
 const Database = require("better-sqlite3");
 
 const SOURCE =
-    path.join(__dirname, "leads.db");
+    process.env.DATABASE_PATH
+        ? path.resolve(
+            process.env.DATABASE_PATH
+        )
+        : path.join(
+            __dirname,
+            "leads.db"
+        );
 
 const BACKUP_DIR =
     path.join(__dirname, "backups");
@@ -22,7 +29,7 @@ async function main() {
 
     if (!fs.existsSync(SOURCE)) {
         throw new Error(
-            "Nie znaleziono leads.db."
+            `Nie znaleziono bazy danych: ${SOURCE}`
         );
     }
 
