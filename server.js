@@ -6134,6 +6134,93 @@ app.get(
 );
 
 // ======================================================
+// HEALTH / READINESS
+// ======================================================
+
+app.get(
+    "/health/live",
+    (req, res) => {
+
+        return res.status(200).json({
+            success: true,
+            status: "alive",
+            uptimeSeconds:
+                Math.floor(process.uptime()),
+            timestamp:
+                new Date().toISOString()
+        });
+    }
+);
+
+
+app.get(
+    "/health/ready",
+    (req, res) => {
+
+        try {
+
+            const databaseCheck =
+                db.prepare(
+                    "SELECT 1 AS ok"
+                ).get();
+
+
+            if (
+                !databaseCheck ||
+                databaseCheck.ok !== 1
+            ) {
+
+                throw new Error(
+                    "Database readiness check failed."
+                );
+            }
+
+
+            return res.status(200).json({
+                success: true,
+                status: "ready",
+                checks: {
+                    database: "ok"
+                },
+                timestamp:
+                    new Date().toISOString()
+            });
+
+        } catch (error) {
+
+            console.error(
+                JSON.stringify({
+                    timestamp:
+                        new Date().toISOString(),
+
+                    type:
+                        "readiness_check_failed",
+
+                    requestId:
+                        req.requestId || null,
+
+                    message:
+                        error?.message ||
+                        "Unknown readiness error"
+                })
+            );
+
+
+            return res.status(503).json({
+                success: false,
+                status: "not_ready",
+                checks: {
+                    database: "failed"
+                },
+                timestamp:
+                    new Date().toISOString()
+            });
+        }
+    }
+);
+
+
+// ======================================================
 // 404 / GLOBAL ERROR HANDLER
 // ======================================================
 
