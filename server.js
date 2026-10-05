@@ -260,6 +260,95 @@ db.pragma("foreign_keys = ON");
 
 
 // ======================================================
+// PLANS / DEFAULT PLAN SEED
+// ======================================================
+
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        kod TEXT NOT NULL UNIQUE,
+        nazwa TEXT NOT NULL,
+        cena_miesieczna INTEGER NOT NULL,
+        cena_wdrozenia INTEGER NOT NULL,
+        limit_leadow INTEGER,
+        limit_userow INTEGER,
+        aktywny INTEGER NOT NULL DEFAULT 1,
+        data_utworzenia DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`).run();
+
+
+const defaultPlans = [
+    {
+        kod: "STARTER",
+        nazwa: "Starter",
+        cenaMiesieczna: 19900,
+        cenaWdrozenia: 49000,
+        limitLeadow: 150,
+        limitUserow: 2
+    },
+    {
+        kod: "PRO",
+        nazwa: "Pro",
+        cenaMiesieczna: 49900,
+        cenaWdrozenia: 149000,
+        limitLeadow: 750,
+        limitUserow: 7
+    },
+    {
+        kod: "BUSINESS",
+        nazwa: "Business",
+        cenaMiesieczna: 99900,
+        cenaWdrozenia: 299000,
+        limitLeadow: 3000,
+        limitUserow: 20
+    },
+    {
+        kod: "CUSTOM",
+        nazwa: "Custom",
+        cenaMiesieczna: 199900,
+        cenaWdrozenia: 500000,
+        limitLeadow: null,
+        limitUserow: null
+    }
+];
+
+
+const insertDefaultPlan =
+    db.prepare(`
+        INSERT OR IGNORE INTO plans (
+            kod,
+            nazwa,
+            cena_miesieczna,
+            cena_wdrozenia,
+            limit_leadow,
+            limit_userow
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+
+const seedDefaultPlans =
+    db.transaction(() => {
+
+        for (const plan of defaultPlans) {
+
+            insertDefaultPlan.run(
+                plan.kod,
+                plan.nazwa,
+                plan.cenaMiesieczna,
+                plan.cenaWdrozenia,
+                plan.limitLeadow,
+                plan.limitUserow
+            );
+        }
+    });
+
+
+seedDefaultPlans();
+
+
+// ======================================================
 // COMPANIES
 // ======================================================
 
@@ -278,12 +367,51 @@ const companyColumns = db
     .all()
     .map(column => column.name);
 
-if (!companyColumns.includes("api_key")) {
 
-    db.prepare(`
-        ALTER TABLE companies
-        ADD COLUMN api_key TEXT
-    `).run();
+const companyMigrations = [
+    {
+        name: "api_key",
+        sql: "ALTER TABLE companies ADD COLUMN api_key TEXT"
+    },
+    {
+        name: "plan_id",
+        sql: "ALTER TABLE companies ADD COLUMN plan_id INTEGER"
+    },
+    {
+        name: "subscription_status",
+        sql: "ALTER TABLE companies ADD COLUMN subscription_status TEXT DEFAULT 'ACTIVE'"
+    },
+    {
+        name: "billing_period_start",
+        sql: "ALTER TABLE companies ADD COLUMN billing_period_start DATETIME"
+    },
+    {
+        name: "billing_period_end",
+        sql: "ALTER TABLE companies ADD COLUMN billing_period_end DATETIME"
+    },
+    {
+        name: "trial_ends_at",
+        sql: "ALTER TABLE companies ADD COLUMN trial_ends_at DATETIME"
+    },
+    {
+        name: "payment_customer_id",
+        sql: "ALTER TABLE companies ADD COLUMN payment_customer_id TEXT"
+    },
+    {
+        name: "payment_subscription_id",
+        sql: "ALTER TABLE companies ADD COLUMN payment_subscription_id TEXT"
+    }
+];
+
+
+for (const migration of companyMigrations) {
+
+    if (!companyColumns.includes(migration.name)) {
+
+        db.prepare(
+            migration.sql
+        ).run();
+    }
 }
 
 
@@ -380,6 +508,162 @@ if (!userColumns.includes("token_version")) {
         ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0
     `).run();
 }
+
+
+// ======================================================
+// COMPANY SCORING
+// ======================================================
+
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS company_scoring (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        company_id INTEGER NOT NULL UNIQUE,
+
+        budzet_wysoki REAL DEFAULT 500000,
+        budzet_sredni REAL DEFAULT 300000,
+
+        punkty_budzet_wysoki INTEGER DEFAULT 40,
+        punkty_budzet_sredni INTEGER DEFAULT 25,
+        punkty_budzet_niski INTEGER DEFAULT 10,
+
+        punkty_termin_szybki INTEGER DEFAULT 30,
+        punkty_termin_inny INTEGER DEFAULT 10,
+
+        punkty_zainteresowanie_wysokie INTEGER DEFAULT 30,
+        punkty_zainteresowanie_srednie INTEGER DEFAULT 15,
+
+        prog_hot INTEGER DEFAULT 80,
+        prog_warm INTEGER DEFAULT 50,
+
+        FOREIGN KEY (company_id)
+            REFERENCES companies(id)
+            ON DELETE CASCADE
+    )
+`).run();
+
+
+// ======================================================
+// PAYMENTS
+// ======================================================
+
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        company_id INTEGER NOT NULL,
+
+        user_id INTEGER,
+
+        plan_id INTEGER NOT NULL,
+
+        status TEXT NOT NULL
+            DEFAULT 'PENDING',
+
+        amount INTEGER NOT NULL,
+
+        setup_amount INTEGER NOT NULL
+            DEFAULT 0,
+
+        currency TEXT NOT NULL
+            DEFAULT 'PLN',
+
+        provider TEXT,
+
+        provider_payment_id TEXT,
+
+        checkout_token TEXT NOT NULL UNIQUE,
+
+        created_at DATETIME
+            DEFAULT CURRENT_TIMESTAMP,
+
+        paid_at DATETIME,
+
+        canceled_at DATETIME,
+
+        FOREIGN KEY (company_id)
+            REFERENCES companies(id)
+            ON DELETE CASCADE,
+
+        FOREIGN KEY (user_id)
+            REFERENCES users(id)
+            ON DELETE SET NULL,
+
+        FOREIGN KEY (plan_id)
+            REFERENCES plans(id)
+            ON DELETE RESTRICT
+    )
+`).run();
+
+
+db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_payments_company
+    ON payments(company_id)
+`).run();
+
+
+db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_payments_provider_payment
+    ON payments(provider_payment_id)
+`).run();
+
+
+db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_payments_status
+    ON payments(status)
+`).run();
+
+
+// ======================================================
+// PLAN HISTORY
+// ======================================================
+
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS plan_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        company_id INTEGER NOT NULL,
+
+        user_id INTEGER,
+
+        old_plan_id INTEGER,
+
+        new_plan_id INTEGER NOT NULL,
+
+        source TEXT NOT NULL DEFAULT 'MANUAL',
+
+        data_zmiany DATETIME
+            DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (company_id)
+            REFERENCES companies(id)
+            ON DELETE CASCADE,
+
+        FOREIGN KEY (user_id)
+            REFERENCES users(id)
+            ON DELETE SET NULL,
+
+        FOREIGN KEY (old_plan_id)
+            REFERENCES plans(id)
+            ON DELETE SET NULL,
+
+        FOREIGN KEY (new_plan_id)
+            REFERENCES plans(id)
+            ON DELETE RESTRICT
+    )
+`).run();
+
+
+db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_plan_history_company
+    ON plan_history(company_id)
+`).run();
+
+
+db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_plan_history_date
+    ON plan_history(data_zmiany)
+`).run();
 
 
 // ======================================================
