@@ -20,6 +20,41 @@ const PORT =
 // KONFIGURACJA
 // ======================================================
 
+const NODE_ENV =
+    process.env.NODE_ENV || "development";
+
+const BILLING_TEST_MODE =
+    process.env.BILLING_TEST_MODE === "true";
+
+
+if (
+    !["development", "production", "test"].includes(
+        NODE_ENV
+    )
+) {
+
+    console.error(
+        "❌ NODE_ENV musi być development, production lub test."
+    );
+
+    process.exit(1);
+}
+
+
+if (
+    !Number.isInteger(PORT) ||
+    PORT < 1 ||
+    PORT > 65535
+) {
+
+    console.error(
+        "❌ PORT musi być liczbą całkowitą od 1 do 65535."
+    );
+
+    process.exit(1);
+}
+
+
 if (
     !process.env.JWT_SECRET ||
     process.env.JWT_SECRET.length < 32
@@ -32,20 +67,24 @@ if (
     process.exit(1);
 }
 
+
 if (!process.env.OPENAI_API_KEY) {
 
-    console.error("❌ Brak OPENAI_API_KEY w .env");
+    console.error(
+        "❌ Brak OPENAI_API_KEY."
+    );
 
     process.exit(1);
 }
 
+
 if (
-    process.env.NODE_ENV === "production" &&
-    process.env.BILLING_TEST_MODE === "true"
+    NODE_ENV === "production" &&
+    BILLING_TEST_MODE
 ) {
 
     console.error(
-        "CRITICAL: BILLING_TEST_MODE nie może działać na produkcji."
+        "❌ BILLING_TEST_MODE nie może działać na produkcji."
     );
 
     process.exit(1);
