@@ -241,25 +241,53 @@ async function run() {
         }
     }
 
-    // TEST SETUP: plan PRO potrzebny do testów ADMIN + USER
+    // TEST SETUP: aktywacja PRO przez testowy billing
     {
-        const r = await request("/api/company/plan", {
-            method: "PATCH",
-            headers: auth(ownerToken),
-            body: {
-                kod: "PRO"
+        const checkout = await request(
+            "/api/billing/checkout",
+            {
+                method: "POST",
+                headers: auth(ownerToken),
+                body: {
+                    kod: "PRO"
+                }
             }
-        });
+        );
 
-        if (r.status !== 200) {
+        if (
+            checkout.status !== 201 ||
+            !checkout.body?.payment?.id
+        ) {
             console.error(
-                "FATAL: Nie udało się ustawić planu PRO dla testowej firmy."
+                "FATAL: Nie udało się utworzyć checkoutu PRO."
             );
             console.error(
-                `HTTP ${r.status} | ${JSON.stringify(r.body)}`
+                `HTTP ${checkout.status} | ${JSON.stringify(checkout.body)}`
+            );
+            process.exitCode = 1;
+            return;
+        }
+
+        const paymentId =
+            checkout.body.payment.id;
+
+        const confirm = await request(
+            `/api/billing/test-confirm/${paymentId}`,
+            {
+                method: "POST",
+                headers: auth(ownerToken)
+            }
+        );
+
+        if (confirm.status !== 200) {
+            console.error(
+                "FATAL: Nie udało się potwierdzić testowej płatności PRO."
             );
             console.error(
-                "Uruchom serwer developerski z BILLING_TEST_MODE=true."
+                `HTTP ${confirm.status} | ${JSON.stringify(confirm.body)}`
+            );
+            console.error(
+                "Uruchom serwer z NODE_ENV=test i BILLING_TEST_MODE=true."
             );
             process.exitCode = 1;
             return;

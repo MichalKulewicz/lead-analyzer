@@ -241,6 +241,14 @@
             💾 Zapisz ustawienia
         </button>
 
+        <button
+            id="recalculateButton"
+            onclick="przeliczLeady()"
+            style="margin-left: 10px;"
+        >
+            🔄 Przelicz istniejące leady
+        </button>
+
         <div id="status" class="status"></div>
 
     </div>
@@ -342,6 +350,92 @@ async function zapisz() {
     pokazSukces(
         "✅ Ustawienia scoringu zapisane."
     );
+}
+
+
+async function przeliczLeady() {
+
+    const potwierdzenie =
+        window.confirm(
+            "Czy na pewno chcesz przeliczyć wszystkie istniejące leady według aktualnych ustawień scoringu?\n\nZmieni to ich score oraz klasyfikację HOT / WARM / COLD."
+        );
+
+
+    if (!potwierdzenie) {
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "recalculateButton"
+        );
+
+
+    button.disabled = true;
+    button.textContent =
+        "⏳ Przeliczanie...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/company/scoring/recalculate",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            pokazBlad(
+                data.message ||
+                "Nie udało się przeliczyć leadów."
+            );
+
+            return;
+        }
+
+
+        const wynik =
+            data.result;
+
+
+        pokazSukces(
+            `✅ Przeliczono ${wynik.total} leadów. ` +
+            `HOT: ${wynik.hot}, ` +
+            `WARM: ${wynik.warm}, ` +
+            `COLD: ${wynik.cold}.`
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        pokazBlad(
+            "Nie udało się połączyć z serwerem."
+        );
+
+
+    } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "🔄 Przelicz istniejące leady";
+    }
 }
 
 

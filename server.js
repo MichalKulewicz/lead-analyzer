@@ -4567,6 +4567,141 @@ app.patch(
 );
 
 
+
+// ======================================================
+// SCORING FIRMY - PRZELICZENIE ISTNIEJĄCYCH LEADÓW
+// ======================================================
+
+app.post(
+    "/api/company/scoring/recalculate",
+    wymagajLogowania,
+    wymagajOwnera,
+    (req, res) => {
+
+        try {
+
+            const companyId =
+                req.user.companyId;
+
+            const scoring =
+                pobierzScoringFirmy(
+                    companyId
+                );
+
+
+            const leads =
+                db.prepare(`
+                    SELECT
+                        id,
+                        budzet,
+                        termin_zakupu,
+                        poziom_zainteresowania
+
+                    FROM leads
+
+                    WHERE company_id = ?
+                `).all(
+                    companyId
+                );
+
+
+            const updateLead =
+                db.prepare(`
+                    UPDATE leads
+
+                    SET
+                        score = ?,
+                        klasyfikacja = ?
+
+                    WHERE id = ?
+                      AND company_id = ?
+                `);
+
+
+            const przelicz =
+                db.transaction(() => {
+
+                    let hot = 0;
+                    let warm = 0;
+                    let cold = 0;
+
+                    for (const lead of leads) {
+
+                        const score =
+                            policzScore(
+                                lead,
+                                scoring
+                            );
+
+                        const klasyfikacja =
+                            klasyfikujLeada(
+                                score,
+                                scoring
+                            );
+
+
+                        updateLead.run(
+                            score,
+                            klasyfikacja,
+                            lead.id,
+                            companyId
+                        );
+
+
+                        if (klasyfikacja === "HOT") {
+                            hot++;
+                        } else if (
+                            klasyfikacja === "WARM"
+                        ) {
+                            warm++;
+                        } else {
+                            cold++;
+                        }
+                    }
+
+
+                    return {
+                        total: leads.length,
+                        hot,
+                        warm,
+                        cold
+                    };
+                });
+
+
+            const wynik =
+                przelicz();
+
+
+            console.log(
+                `📊 Przeliczono scoring ${wynik.total} leadów firmy #${companyId}`
+            );
+
+
+            res.json({
+                success: true,
+
+                message:
+                    `Przeliczono ${wynik.total} leadów.`,
+
+                result: wynik
+            });
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Nie udało się przeliczyć leadów."
+            });
+        }
+    }
+);
+
+
 // ======================================================
 // OWNER / ADMIN
 // ======================================================
