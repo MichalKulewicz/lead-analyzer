@@ -1195,6 +1195,784 @@ body {
 
 </style>
 
+
+<style id="LEAD_ANALYZER_DASHBOARD_RESPONSIVE_V2">
+
+/* =========================================================
+   DASHBOARD V2
+   Wizualnie spójny z landing page
+   ========================================================= */
+
+#appView {
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(79, 70, 229, 0.10),
+            transparent 34%
+        ),
+        #050914;
+    color: #f8fafc;
+}
+
+/* HEADER */
+
+#appView > header {
+    background: rgba(7, 12, 27, 0.96);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+    padding: 18px 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+#appView .header-left {
+    min-width: 0;
+}
+
+#appView .header-left h1 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -0.4px;
+}
+
+#appView .header-left p {
+    margin: 5px 0 0;
+    color: #7f8ca3;
+    font-size: 13px;
+}
+
+#appView .header-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    min-width: 0;
+}
+
+#appView .user-info {
+    min-width: 0;
+    text-align: right;
+    line-height: 1.35;
+}
+
+#appView #userName {
+    color: #f8fafc;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+#appView #userEmail {
+    color: #8d99ae;
+    font-size: 12px;
+
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#appView > header .secondary {
+    flex: 0 0 auto;
+
+    background: rgba(255,255,255,0.05);
+    color: #e5e7eb;
+
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 10px;
+
+    padding: 10px 15px;
+
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* NAV */
+
+#appView .main-navigation {
+    background: rgba(7, 12, 27, 0.96);
+    border-bottom: 1px solid rgba(148,163,184,0.10);
+    box-shadow: none;
+}
+
+#appView .main-navigation-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 10px 22px;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+#appView .nav-button {
+    color: #9aa7bb;
+    background: transparent;
+
+    border: 1px solid transparent;
+    border-radius: 9px;
+
+    padding: 9px 11px;
+
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+#appView .nav-button:hover {
+    color: #ffffff;
+    background: rgba(255,255,255,0.05);
+}
+
+#appView .nav-button.active {
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+}
+
+/* MAIN */
+
+#appView .container {
+    width: min(1240px, calc(100% - 40px));
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 28px 0 60px;
+}
+
+/* ADD LEAD */
+
+#appView .top-actions {
+    margin-bottom: 18px;
+
+    display: flex;
+    justify-content: flex-end;
+}
+
+#appView .top-actions .primary {
+    background: linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+
+    color: white;
+    border: none;
+    border-radius: 10px;
+
+    padding: 11px 17px;
+
+    font-weight: 750;
+
+    box-shadow:
+        0 8px 24px rgba(79,70,229,0.18);
+}
+
+/* ATTENTION */
+
+#appView .attention-dashboard-card {
+    background: linear-gradient(
+        135deg,
+        rgba(15,23,42,0.96),
+        rgba(11,18,34,0.96)
+    );
+
+    color: #f8fafc;
+
+    border:
+        1px solid rgba(248,113,113,0.18);
+
+    border-left:
+        4px solid #ef4444;
+
+    border-radius: 16px;
+
+    padding: 21px 23px;
+    margin-bottom: 20px;
+
+    box-shadow:
+        0 14px 35px rgba(0,0,0,0.18);
+}
+
+#appView .attention-dashboard-card:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 18px 42px rgba(0,0,0,0.23);
+}
+
+#appView .attention-dashboard-title {
+    color: #f8fafc;
+    font-size: 17px;
+}
+
+#appView .attention-dashboard-description {
+    color: #8d99ae;
+    font-size: 13px;
+}
+
+#appView .attention-dashboard-count {
+    background: rgba(239,68,68,0.13);
+    color: #f87171;
+
+    border: 1px solid rgba(248,113,113,0.18);
+}
+
+/* STATS */
+
+#appView .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+
+    margin-bottom: 20px;
+}
+
+#appView .stats .card {
+    min-width: 0;
+
+    background: linear-gradient(
+        145deg,
+        rgba(15,23,42,0.98),
+        rgba(10,17,32,0.98)
+    );
+
+    border: 1px solid rgba(148,163,184,0.12);
+    border-radius: 15px;
+
+    padding: 20px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,0.16);
+}
+
+#appView .stats .card h3 {
+    margin: 0 0 13px;
+
+    color: #8d99ae;
+
+    font-size: 13px;
+    letter-spacing: 0.02em;
+}
+
+#appView .stats .number {
+    font-size: 31px;
+    line-height: 1;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+#appView .stats .number.hot {
+    color: #f87171;
+}
+
+#appView .stats .number.warm {
+    color: #fbbf24;
+}
+
+#appView .stats .number.cold {
+    color: #60a5fa;
+}
+
+/* TOOLBAR */
+
+#appView .toolbar {
+    background: rgba(15,23,42,0.95);
+
+    border: 1px solid rgba(148,163,184,0.12);
+    border-radius: 15px;
+
+    padding: 12px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 20px;
+}
+
+#appView .search {
+    flex: 1 1 280px;
+    min-width: 180px;
+
+    background: #0b1220;
+    color: #f8fafc;
+
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 9px;
+
+    padding: 11px 13px;
+}
+
+#appView .search::placeholder {
+    color: #667085;
+}
+
+#appView .toolbar button {
+    white-space: nowrap;
+}
+
+#appView .filter {
+    background: rgba(255,255,255,0.04);
+    color: #9aa7bb;
+
+    border: 1px solid rgba(148,163,184,0.10);
+    border-radius: 9px;
+
+    padding: 10px 12px;
+}
+
+#appView .filter.active {
+    background: #202b40;
+    color: white;
+}
+
+#appView .toolbar .primary {
+    background: #202b40;
+    color: #ffffff;
+
+    border: 1px solid rgba(148,163,184,0.12);
+    border-radius: 9px;
+}
+
+/* LEADS */
+
+#appView .leads-section {
+    background: rgba(15,23,42,0.97);
+    color: #f8fafc;
+
+    border: 1px solid rgba(148,163,184,0.12);
+    border-radius: 16px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,0.16);
+}
+
+#appView .section-header {
+    padding: 20px 22px;
+
+    border-bottom:
+        1px solid rgba(148,163,184,0.10);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+#appView .section-header h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 20px;
+}
+
+#appView #resultCount {
+    color: #8d99ae;
+    font-size: 13px;
+}
+
+#appView table {
+    width: 100%;
+    min-width: 850px;
+
+    border-collapse: collapse;
+
+    background: transparent;
+}
+
+#appView th {
+    color: #7f8ca3;
+    background: rgba(255,255,255,0.018);
+
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+#appView th,
+#appView td {
+    padding: 14px 15px;
+
+    border-bottom:
+        1px solid rgba(148,163,184,0.08);
+
+    text-align: left;
+}
+
+#appView td {
+    color: #dbe2ec;
+}
+
+#appView tbody tr {
+    transition: background 0.15s ease;
+}
+
+#appView tbody tr:hover {
+    background: rgba(99,102,241,0.055);
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    #appView .container {
+        width: min(100% - 28px, 760px);
+        padding-top: 20px;
+    }
+
+    #appView .stats {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    #appView .toolbar {
+        flex-wrap: wrap;
+    }
+
+    #appView .search {
+        flex-basis: 100%;
+        width: 100%;
+    }
+
+    #appView .leads-section {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    #appView > header {
+        padding:
+            max(15px, env(safe-area-inset-top))
+            16px
+            15px;
+
+        gap: 12px;
+    }
+
+    #appView .header-left h1 {
+        font-size: 18px;
+        white-space: nowrap;
+    }
+
+    #appView .header-left p {
+        font-size: 11px;
+    }
+
+    #appView .header-right {
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    #appView .user-info {
+        max-width: 125px;
+    }
+
+    #appView #userName {
+        font-size: 11px;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #appView #userEmail {
+        max-width: 125px;
+        font-size: 9px;
+    }
+
+    #appView > header .secondary {
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+    }
+
+    /* Nawigacja pozioma zamiast gigantycznej białej ściany */
+
+    #appView .main-navigation {
+        overflow: hidden;
+    }
+
+    #appView .main-navigation-inner {
+        padding: 9px 12px;
+
+        display: flex;
+        flex-wrap: nowrap;
+
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+
+        scrollbar-width: none;
+    }
+
+    #appView .main-navigation-inner::-webkit-scrollbar {
+        display: none;
+    }
+
+    #appView .nav-button {
+        flex: 0 0 auto;
+
+        font-size: 11px;
+        padding: 9px 10px;
+    }
+
+    #appView .container {
+        width: calc(100% - 24px);
+        padding: 16px 0 42px;
+    }
+
+    #appView .attention-dashboard-card {
+        padding: 17px 16px;
+        gap: 12px;
+
+        align-items: center;
+    }
+
+    #appView .attention-dashboard-left {
+        gap: 11px;
+        min-width: 0;
+    }
+
+    #appView .attention-dashboard-icon {
+        font-size: 25px;
+    }
+
+    #appView .attention-dashboard-title {
+        font-size: 15px;
+    }
+
+    #appView .attention-dashboard-description {
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    #appView .attention-dashboard-count {
+        flex: 0 0 42px;
+
+        min-width: 42px;
+        width: 42px;
+        height: 42px;
+
+        font-size: 17px;
+    }
+
+    #appView .top-actions {
+        margin-bottom: 14px;
+    }
+
+    #appView .top-actions .primary {
+        width: 100%;
+        padding: 12px 15px;
+    }
+
+    #appView .stats {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    #appView .stats .card {
+        padding: 16px 14px;
+        border-radius: 13px;
+        min-height: 105px;
+    }
+
+    #appView .stats .card h3 {
+        font-size: 11px;
+        margin-bottom: 15px;
+
+        white-space: nowrap;
+    }
+
+    #appView .stats .number {
+        font-size: 27px;
+    }
+
+    #appView .toolbar {
+        padding: 10px;
+        gap: 7px;
+        border-radius: 13px;
+    }
+
+    #appView .search {
+        flex: 0 0 100%;
+        width: 100%;
+        min-width: 0;
+
+        box-sizing: border-box;
+    }
+
+    #appView .filter {
+        flex: 1 1 calc(50% - 7px);
+
+        min-width: 0;
+
+        padding: 9px 6px;
+
+        font-size: 10px;
+    }
+
+    #appView .toolbar .primary {
+        flex: 1 1 100%;
+        width: 100%;
+
+        padding: 10px;
+        font-size: 11px;
+    }
+
+    #appView .leads-section {
+        border-radius: 13px;
+    }
+
+    #appView .section-header {
+        padding: 16px;
+    }
+
+    #appView .section-header h2 {
+        font-size: 18px;
+    }
+
+    #appView table {
+        min-width: 760px;
+        font-size: 12px;
+    }
+
+    #appView th,
+    #appView td {
+        padding: 12px 11px;
+    }
+
+}
+
+
+/* =========================================================
+   BARDZO MAŁE TELEFONY
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    #appView .user-info {
+        display: none;
+    }
+
+    #appView .stats .card h3 {
+        font-size: 10px;
+    }
+
+    #appView .stats .number {
+        font-size: 25px;
+    }
+
+}
+
+</style>
+
+
+<style id="LEAD_ANALYZER_MOBILE_NAV_FINAL">
+
+/* =========================================================
+   MOBILE NAV FINAL
+   ========================================================= */
+
+.mobile-navigation-bar {
+    display: none;
+}
+
+@media (max-width: 700px) {
+
+    #appView #mainNavigation {
+        overflow: visible !important;
+        padding: 9px 12px !important;
+    }
+
+    #appView #mainNavigation .mobile-navigation-bar {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #appView #mobileMenuToggle {
+        width: 100% !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+
+        padding: 11px 14px !important;
+
+        background: rgba(255,255,255,0.055) !important;
+        color: #f8fafc !important;
+
+        border: 1px solid rgba(148,163,184,0.16) !important;
+        border-radius: 10px !important;
+
+        font-size: 14px !important;
+        font-weight: 800 !important;
+    }
+
+    #appView #mainNavigationInner {
+        display: none !important;
+
+        width: 100% !important;
+        max-width: none !important;
+
+        margin: 0 !important;
+        padding: 8px 0 1px !important;
+
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+
+        gap: 6px !important;
+
+        overflow: visible !important;
+        white-space: normal !important;
+    }
+
+    #appView #mainNavigationInner.mobile-open {
+        display: flex !important;
+    }
+
+    #appView #mainNavigationInner .nav-button {
+        display: block !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+
+        flex: 0 0 auto !important;
+
+        padding: 11px 13px !important;
+
+        text-align: left !important;
+        white-space: normal !important;
+
+        border-radius: 9px !important;
+    }
+
+}
+
+</style>
+
 </head>
 
 <body>
@@ -1314,6 +2092,19 @@ body {
     id="mainNavigation"
     class="main-navigation"
     style="display:none;">
+
+    <div class="mobile-navigation-bar">
+        <button
+            id="mobileMenuToggle"
+            class="mobile-menu-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="mainNavigationInner"
+            onclick="toggleMobileNavigation()">
+            <span>☰</span>
+            <span>Menu</span>
+        </button>
+    </div>
 
     <div
         id="mainNavigationInner"
@@ -3679,6 +4470,129 @@ if (rola === "OWNER") {
 
 })();
 
+</script>
+
+
+<script id="LEAD_ANALYZER_MOBILE_NAV_V1">
+(function () {
+
+    function ustawStanMenu(open) {
+
+        const inner =
+            document.getElementById(
+                "mainNavigationInner"
+            );
+
+        const button =
+            document.getElementById(
+                "mobileMenuToggle"
+            );
+
+        if (!inner || !button) {
+            return;
+        }
+
+        inner.classList.toggle(
+            "mobile-open",
+            open
+        );
+
+        button.classList.toggle(
+            "active",
+            open
+        );
+
+        button.setAttribute(
+            "aria-expanded",
+            open ? "true" : "false"
+        );
+
+        const icon =
+            button.querySelector(
+                "span:first-child"
+            );
+
+        if (icon) {
+            icon.textContent =
+                open ? "×" : "☰";
+        }
+    }
+
+
+    window.toggleMobileNavigation =
+        function () {
+
+            const inner =
+                document.getElementById(
+                    "mainNavigationInner"
+                );
+
+            if (!inner) {
+                return;
+            }
+
+            ustawStanMenu(
+                !inner.classList.contains(
+                    "mobile-open"
+                )
+            );
+        };
+
+
+    window.addEventListener(
+        "resize",
+        function () {
+
+            if (
+                window.innerWidth > 700
+            ) {
+                ustawStanMenu(false);
+            }
+        }
+    );
+
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                window.innerWidth > 700
+            ) {
+                return;
+            }
+
+            const nav =
+                document.getElementById(
+                    "mainNavigation"
+                );
+
+            const inner =
+                document.getElementById(
+                    "mainNavigationInner"
+                );
+
+            if (
+                !nav ||
+                !inner ||
+                !inner.classList.contains(
+                    "mobile-open"
+                )
+            ) {
+                return;
+            }
+
+            if (
+                !nav.contains(
+                    event.target
+                )
+            ) {
+                ustawStanMenu(false);
+            }
+        }
+    );
+
+})();
 </script>
 
 </body>

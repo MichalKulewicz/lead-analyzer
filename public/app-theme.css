@@ -1,0 +1,903 @@
+/* =========================================================
+   LEAD ANALYZER - SHARED APP THEME V1
+   ========================================================= */
+
+:root {
+    --la-bg: #050914;
+    --la-surface: #0b1220;
+    --la-surface-2: #0f172a;
+    --la-border: rgba(148, 163, 184, 0.13);
+    --la-border-strong: rgba(148, 163, 184, 0.20);
+
+    --la-text: #f8fafc;
+    --la-muted: #8d99ae;
+    --la-muted-2: #64748b;
+
+    --la-primary: #6366f1;
+    --la-primary-dark: #4f46e5;
+
+    --la-danger: #f87171;
+    --la-warning: #fbbf24;
+    --la-success: #4ade80;
+    --la-info: #60a5fa;
+}
+
+html {
+    background: var(--la-bg);
+}
+
+body {
+    margin: 0 !important;
+
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif !important;
+
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(79, 70, 229, 0.10),
+            transparent 32%
+        ),
+        var(--la-bg) !important;
+
+    color: var(--la-text) !important;
+
+    overscroll-behavior-y: none;
+}
+
+/* HEADER */
+
+body > header {
+    min-height: 78px;
+
+    padding: 17px 28px !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    background: rgba(7, 12, 27, 0.96) !important;
+
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.10);
+
+    color: var(--la-text) !important;
+
+    box-shadow: none !important;
+}
+
+body > header h1 {
+    margin: 0 !important;
+
+    color: var(--la-text) !important;
+
+    font-size: 22px !important;
+    line-height: 1.2;
+    letter-spacing: -0.4px;
+}
+
+body > header p {
+    margin: 5px 0 0 !important;
+
+    color: var(--la-muted) !important;
+
+    font-size: 13px !important;
+    line-height: 1.4;
+}
+
+body > header button {
+    flex: 0 0 auto;
+}
+
+/* MAIN CONTAINER */
+
+body > .container {
+    width: min(1180px, calc(100% - 40px)) !important;
+    max-width: 1180px !important;
+
+    margin: 0 auto !important;
+    padding: 28px 0 60px !important;
+}
+
+/* CARDS */
+
+.card,
+.lead-card,
+.empty,
+.history-section,
+.billing-section {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(15, 23, 42, 0.98),
+            rgba(10, 17, 32, 0.98)
+        ) !important;
+
+    color: var(--la-text) !important;
+
+    border:
+        1px solid var(--la-border) !important;
+
+    border-radius: 16px !important;
+
+    box-shadow:
+        0 14px 36px rgba(0, 0, 0, 0.16) !important;
+}
+
+.card h1,
+.card h2,
+.card h3,
+.lead-card h1,
+.lead-card h2,
+.lead-card h3 {
+    color: var(--la-text);
+}
+
+.card p,
+.card small {
+    color: var(--la-muted);
+}
+
+/* BUTTONS */
+
+button {
+    font-family: inherit;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+.primary {
+    background:
+        linear-gradient(
+            135deg,
+            var(--la-primary),
+            var(--la-primary-dark)
+        ) !important;
+
+    color: #fff !important;
+
+    border:
+        1px solid rgba(129, 140, 248, 0.18) !important;
+
+    border-radius: 10px !important;
+
+    box-shadow:
+        0 8px 24px rgba(79, 70, 229, 0.16);
+}
+
+.primary:hover {
+    filter: brightness(1.07);
+}
+
+.secondary {
+    background:
+        rgba(255, 255, 255, 0.05) !important;
+
+    color: #e5e7eb !important;
+
+    border:
+        1px solid var(--la-border-strong) !important;
+
+    border-radius: 10px !important;
+}
+
+.secondary:hover {
+    background:
+        rgba(255, 255, 255, 0.09) !important;
+}
+
+/* FORMS */
+
+input,
+select,
+textarea {
+    font-family: inherit;
+
+    background: #0b1220 !important;
+    color: var(--la-text) !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.20) !important;
+
+    border-radius: 9px !important;
+
+    outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color:
+        rgba(129, 140, 248, 0.75) !important;
+
+    box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.10);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #64748b;
+}
+
+label {
+    color: #cbd5e1;
+}
+
+/* TABLES */
+
+table {
+    color: #dbe2ec;
+}
+
+thead {
+    background:
+        rgba(255, 255, 255, 0.025) !important;
+}
+
+th {
+    color: #7f8ca3 !important;
+}
+
+th,
+td {
+    border-color:
+        rgba(148, 163, 184, 0.09) !important;
+}
+
+tbody tr {
+    transition: background 0.15s ease;
+}
+
+tbody tr:hover {
+    background:
+        rgba(99, 102, 241, 0.055) !important;
+}
+
+/* TEXT */
+
+.muted,
+.description,
+.help,
+.hint {
+    color: var(--la-muted) !important;
+}
+
+/* ATTENTION */
+
+.number {
+    color: var(--la-text);
+}
+
+.danger-number,
+.score {
+    color: var(--la-danger) !important;
+}
+
+.budget {
+    color: var(--la-muted) !important;
+}
+
+.message {
+    background:
+        rgba(255, 255, 255, 0.035) !important;
+
+    color: #dbe2ec !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.08);
+}
+
+/* STATUS / ERROR */
+
+.error {
+    background:
+        rgba(239, 68, 68, 0.10) !important;
+
+    color: #fca5a5 !important;
+
+    border:
+        1px solid rgba(239, 68, 68, 0.18);
+}
+
+.success {
+    background:
+        rgba(34, 197, 94, 0.10) !important;
+
+    color: #86efac !important;
+
+    border:
+        1px solid rgba(34, 197, 94, 0.18);
+}
+
+/* CODE / API */
+
+pre,
+code {
+    background: #060b16 !important;
+    color: #cbd5e1 !important;
+
+    border-color:
+        rgba(148, 163, 184, 0.12) !important;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    body > .container {
+        width: calc(100% - 28px) !important;
+        padding-top: 20px !important;
+    }
+
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    body > header {
+        min-height: auto;
+
+        padding:
+            max(15px, env(safe-area-inset-top))
+            15px
+            15px !important;
+
+        gap: 12px;
+    }
+
+    body > header h1 {
+        font-size: 18px !important;
+    }
+
+    body > header p {
+        max-width: 230px;
+
+        font-size: 11px !important;
+    }
+
+    body > header button {
+        padding: 9px 11px !important;
+
+        font-size: 11px !important;
+
+        white-space: nowrap;
+    }
+
+    body > .container {
+        width: calc(100% - 24px) !important;
+
+        padding:
+            18px 0
+            calc(40px + env(safe-area-inset-bottom))
+            !important;
+    }
+
+    .card,
+    .lead-card,
+    .empty,
+    .history-section,
+    .billing-section {
+        border-radius: 13px !important;
+    }
+
+}
+
+
+/* =========================================================
+   LEAD ANALYZER - PLANS + INTEGRATIONS POLISH V2
+   ========================================================= */
+
+/* ---------- PLANS ---------- */
+
+.plan,
+.current-plan-banner,
+.bottom-info {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(15, 23, 42, 0.98),
+            rgba(9, 16, 30, 0.98)
+        ) !important;
+
+    color: #f8fafc !important;
+
+    border-color: rgba(148, 163, 184, 0.13);
+
+    box-shadow:
+        0 14px 36px rgba(0, 0, 0, 0.18) !important;
+}
+
+.plan {
+    border: 1px solid rgba(148, 163, 184, 0.13) !important;
+}
+
+.plan.current {
+    border: 2px solid #22c55e !important;
+
+    box-shadow:
+        0 0 0 1px rgba(34, 197, 94, 0.08),
+        0 18px 45px rgba(0, 0, 0, 0.22) !important;
+}
+
+.plan.recommended {
+    border: 2px solid #7c3aed !important;
+
+    box-shadow:
+        0 0 0 1px rgba(124, 58, 237, 0.10),
+        0 18px 45px rgba(0, 0, 0, 0.22) !important;
+}
+
+.plan h3,
+.price,
+.current-plan-title,
+.usage-value,
+.info-title,
+.billing-value,
+.history-change,
+.history-section h3 {
+    color: #f8fafc !important;
+}
+
+.price span,
+.setup,
+.intro p,
+.usage-label,
+.info-text,
+.billing-header p,
+.billing-label,
+.history-meta,
+.history-date,
+.history-empty {
+    color: #8d99ae !important;
+}
+
+.features li {
+    color: #dbe2ec !important;
+
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.09) !important;
+}
+
+.usage-box,
+.billing-box {
+    background:
+        rgba(255, 255, 255, 0.035) !important;
+
+    color: #f8fafc !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.10) !important;
+}
+
+.progress {
+    background:
+        rgba(148, 163, 184, 0.15) !important;
+}
+
+.bottom-info {
+    border:
+        1px solid rgba(148, 163, 184, 0.13) !important;
+}
+
+.history-section {
+    border-top:
+        1px solid rgba(148, 163, 184, 0.10) !important;
+}
+
+.history-item {
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.08) !important;
+}
+
+.history-toggle {
+    color: #f8fafc !important;
+}
+
+.billing-status {
+    background:
+        rgba(34, 197, 94, 0.12) !important;
+
+    color: #86efac !important;
+
+    border:
+        1px solid rgba(34, 197, 94, 0.18);
+}
+
+.billing-status.inactive {
+    background:
+        rgba(239, 68, 68, 0.10) !important;
+
+    color: #fca5a5 !important;
+
+    border-color:
+        rgba(239, 68, 68, 0.18);
+}
+
+.billing-status.trial {
+    background:
+        rgba(245, 158, 11, 0.10) !important;
+
+    color: #fcd34d !important;
+
+    border-color:
+        rgba(245, 158, 11, 0.18);
+}
+
+
+/* CHECKOUT */
+
+.checkout-overlay {
+    background:
+        rgba(2, 6, 23, 0.88) !important;
+
+    backdrop-filter: blur(5px);
+}
+
+.checkout-modal {
+    background:
+        linear-gradient(
+            145deg,
+            #0f172a,
+            #080f1d
+        ) !important;
+
+    color: #f8fafc !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.15);
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.50) !important;
+}
+
+.checkout-row {
+    border-bottom:
+        1px solid rgba(148, 163, 184, 0.10) !important;
+}
+
+.checkout-secondary {
+    background:
+        rgba(255, 255, 255, 0.06) !important;
+
+    color: #e5e7eb !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+
+/* ---------- INTEGRATIONS ---------- */
+
+/*
+   Nie robimy już białych pól pośrodku ciemnego UI.
+   Dotyczy również readonly inputów z API key / endpointem.
+*/
+
+body input,
+body textarea,
+body select {
+    background: #080e1b !important;
+    color: #e5e7eb !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.18) !important;
+}
+
+body input[readonly],
+body textarea[readonly] {
+    background: #070d19 !important;
+    color: #cbd5e1 !important;
+
+    -webkit-text-fill-color: #cbd5e1;
+
+    opacity: 1;
+}
+
+body input:focus,
+body textarea:focus,
+body select:focus {
+    border-color:
+        rgba(129, 140, 248, 0.75) !important;
+
+    box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.10) !important;
+}
+
+
+/* iOS / Safari */
+
+input,
+textarea {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 650px) {
+
+    .plans {
+        gap: 18px !important;
+    }
+
+    .plan {
+        padding: 22px !important;
+    }
+
+    .price {
+        font-size: 30px !important;
+    }
+
+    .current-plan-banner,
+    .billing-section,
+    .bottom-info {
+        padding: 18px !important;
+    }
+
+    .checkout-modal {
+        padding: 22px !important;
+    }
+
+}
+
+
+/* =========================================================
+   INTEGRATIONS FINAL POLISH V3
+   ========================================================= */
+
+.value-box {
+    flex: 1;
+
+    min-width: 0 !important;
+
+    background:
+        #070d19 !important;
+
+    color:
+        #dbeafe !important;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.16) !important;
+
+    border-radius:
+        10px !important;
+
+    padding:
+        13px 14px !important;
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace !important;
+
+    font-size:
+        13px;
+
+    line-height:
+        1.45;
+
+    word-break:
+        break-all;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.025);
+}
+
+.key-row,
+.endpoint-row {
+    align-items:
+        stretch !important;
+}
+
+.warning {
+    background:
+        rgba(245, 158, 11, 0.09) !important;
+
+    color:
+        #fcd34d !important;
+
+    border:
+        1px solid rgba(245, 158, 11, 0.17);
+
+    border-radius:
+        10px !important;
+}
+
+.danger-box {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(69, 10, 10, 0.20),
+            rgba(15, 23, 42, 0.98)
+        ) !important;
+
+    border:
+        1px solid rgba(239, 68, 68, 0.20) !important;
+}
+
+.danger-box h2 {
+    color:
+        #fca5a5 !important;
+}
+
+.danger-box p {
+    color:
+        #cbd5e1 !important;
+}
+
+@media (max-width: 600px) {
+
+    .key-row,
+    .endpoint-row {
+        display:
+            grid !important;
+
+        grid-template-columns:
+            auto 1fr;
+
+        gap:
+            9px !important;
+    }
+
+    .key-row .value-box,
+    .endpoint-row .value-box {
+        grid-column:
+            1 / -1;
+
+        width:
+            100%;
+    }
+
+    .endpoint-row .primary {
+        grid-column:
+            1 / -1;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE DASHBOARD NAVIGATION V1
+   ========================================================= */
+
+.mobile-navigation-bar {
+    display: none;
+}
+
+.mobile-menu-toggle {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    padding: 11px 14px;
+
+    border:
+        1px solid rgba(148, 163, 184, 0.14);
+
+    border-radius: 11px;
+
+    background:
+        rgba(255, 255, 255, 0.045);
+
+    color: #f8fafc;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.mobile-menu-toggle span:first-child {
+    font-size: 19px;
+    line-height: 1;
+}
+
+.mobile-menu-toggle.active {
+    background:
+        rgba(99, 102, 241, 0.13);
+
+    border-color:
+        rgba(129, 140, 248, 0.30);
+}
+
+
+@media (max-width: 700px) {
+
+    #mainNavigation {
+        padding:
+            9px 12px !important;
+
+        overflow:
+            visible !important;
+    }
+
+    .mobile-navigation-bar {
+        display:
+            block;
+    }
+
+    #mainNavigationInner {
+        display:
+            none !important;
+
+        width:
+            100%;
+
+        padding:
+            8px 0 2px !important;
+
+        overflow:
+            visible !important;
+
+        flex-direction:
+            column !important;
+
+        gap:
+            6px !important;
+    }
+
+    #mainNavigationInner.mobile-open {
+        display:
+            flex !important;
+    }
+
+    #mainNavigationInner .nav-button {
+        width:
+            100% !important;
+
+        flex:
+            none !important;
+
+        text-align:
+            left !important;
+
+        justify-content:
+            flex-start !important;
+
+        padding:
+            11px 13px !important;
+
+        border-radius:
+            9px !important;
+
+        white-space:
+            normal !important;
+    }
+
+    #mainNavigationInner .nav-button.active {
+        background:
+            linear-gradient(
+                135deg,
+                rgba(99, 102, 241, 0.22),
+                rgba(124, 58, 237, 0.14)
+            ) !important;
+
+        border-color:
+            rgba(129, 140, 248, 0.30) !important;
+    }
+
+}

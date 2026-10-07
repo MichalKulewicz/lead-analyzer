@@ -154,6 +154,7 @@
             display: none;
         }
     </style>
+    <link rel="stylesheet" href="/app-theme.css">
 </head>
 
 <body>
@@ -334,7 +335,7 @@ let pokazKlucz = false;
 // ========================================
 
 if (!token) {
-    window.location.href = "/";
+    window.location.href = "/app.html";
 }
 
 
@@ -367,7 +368,7 @@ async function pobierzApiKey() {
                 "leadAnalyzerToken"
             );
 
-            window.location.href = "/";
+            window.location.href = "/app.html";
 
             return;
         }
@@ -456,7 +457,7 @@ async function regenerujApiKey() {
                 "leadAnalyzerToken"
             );
 
-            window.location.href = "/";
+            window.location.href = "/app.html";
 
             return;
         }
@@ -475,7 +476,7 @@ async function regenerujApiKey() {
             data.apiKey;
 
 
-        pokazKlucz = true;
+        pokazKlucz = false;
 
 
         aktualizujKlucz();
@@ -538,12 +539,12 @@ function aktualizujKlucz() {
         const poczatek =
             apiKey.substring(
                 0,
-                12
+                8
             );
 
         view.textContent =
             poczatek +
-            "••••••••••••••••••••••••••";
+            "••••••••••••••••••";
     }
 
 
@@ -589,17 +590,85 @@ function aktualizujCurl() {
 // KOPIOWANIE
 // ========================================
 
+async function kopiujTekst(tekst) {
+
+    if (!tekst) {
+        return false;
+    }
+
+    try {
+
+        if (
+            navigator.clipboard &&
+            window.isSecureContext
+        ) {
+            await navigator.clipboard.writeText(
+                tekst
+            );
+
+            return true;
+        }
+
+    } catch (error) {
+        // Safari/iOS fallback poniżej.
+    }
+
+
+    const textarea =
+        document.createElement("textarea");
+
+    textarea.value = tekst;
+    textarea.setAttribute(
+        "readonly",
+        ""
+    );
+
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+
+    document.body.appendChild(
+        textarea
+    );
+
+    textarea.focus();
+    textarea.select();
+
+    textarea.setSelectionRange(
+        0,
+        textarea.value.length
+    );
+
+    let sukces = false;
+
+    try {
+        sukces =
+            document.execCommand("copy");
+    } finally {
+        textarea.remove();
+    }
+
+    return sukces;
+}
+
+
 async function kopiujApiKey() {
 
     if (!apiKey) {
         return;
     }
 
+    const sukces =
+        await kopiujTekst(apiKey);
 
-    await navigator.clipboard.writeText(
-        apiKey
-    );
+    if (!sukces) {
+        pokazBlad(
+            "apiError",
+            "Nie udało się skopiować klucza."
+        );
 
+        return;
+    }
 
     pokazKomunikat(
         "copySuccess"
@@ -614,10 +683,12 @@ async function kopiujEndpoint() {
         "/api/external/leads";
 
 
-    await navigator.clipboard.writeText(
-        endpoint
-    );
+    const sukces =
+        await kopiujTekst(endpoint);
 
+    if (!sukces) {
+        return;
+    }
 
     pokazKomunikat(
         "endpointSuccess"
@@ -633,10 +704,12 @@ async function kopiujCurl() {
         ).textContent;
 
 
-    await navigator.clipboard.writeText(
-        tekst
-    );
+    const sukces =
+        await kopiujTekst(tekst);
 
+    if (!sukces) {
+        return;
+    }
 
     pokazKomunikat(
         "curlSuccess"
@@ -696,7 +769,7 @@ function pokazBlad(
 
 function wrocDoPanelu() {
 
-    window.location.href = "/";
+    window.location.href = "/app.html";
 }
 
 
