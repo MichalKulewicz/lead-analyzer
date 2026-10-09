@@ -317,6 +317,45 @@
 
     </div>
 
+<div class="card">
+
+    <h2>📝 Formularze WWW</h2>
+
+    <p>
+        Twórz formularze kontaktowe dla swojej firmy.
+        Każde zgłoszenie trafi automatycznie do Lead Analyzera.
+    </p>
+
+    <div class="label">
+        Nazwa nowego formularza
+    </div>
+
+    <div class="key-row">
+        <input
+            id="formName"
+            type="text"
+            maxlength="100"
+            placeholder="Np. Formularz kontaktowy"
+            style="flex: 1; min-width: 180px; padding: 12px;"
+        >
+
+        <button
+            class="primary"
+            onclick="utworzFormularz()">
+            ➕ Utwórz
+        </button>
+    </div>
+
+    <div id="formsMessage" role="status"></div>
+
+    <h3>Twoje formularze</h3>
+
+    <div id="formsList">
+        Ładowanie...
+    </div>
+
+</div>
+
 </div>
 
 
@@ -774,10 +813,123 @@ function wrocDoPanelu() {
 
 
 // ========================================
+// FORMULARZE WWW
+// ========================================
+
+function pokazKomunikatFormularzy(tekst) {
+    document.getElementById("formsMessage").textContent = tekst;
+}
+
+async function pobierzFormularze() {
+    const lista = document.getElementById("formsList");
+
+    try {
+        const response = await fetch("/api/forms", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Nie udało się pobrać formularzy.");
+        }
+
+        const data = await response.json();
+
+        lista.replaceChildren();
+
+        if (!data.forms.length) {
+            lista.textContent = "Nie masz jeszcze formularzy.";
+            return;
+        }
+
+        for (const form of data.forms) {
+            const kontener = document.createElement("div");
+            kontener.style.cssText =
+                "padding:16px; margin:12px 0; border:1px solid #7775; border-radius:10px;";
+
+            const nazwa = document.createElement("strong");
+            nazwa.textContent = form.nazwa;
+
+            const status = document.createElement("p");
+            status.textContent = form.active
+                ? "🟢 Aktywny"
+                : "🔴 Nieaktywny";
+
+            const przycisk = document.createElement("button");
+            przycisk.className = "primary";
+            przycisk.textContent = "📋 Kopiuj kod osadzenia";
+
+            przycisk.onclick = async () => {
+                const adres = new URL(
+                    `/form.html?id=${encodeURIComponent(form.public_id)}`,
+                    window.location.origin
+                ).href;
+
+                const kod = `<iframe src="${adres}" width="100%" height="650" style="border:0" title="Formularz kontaktowy"></iframe>`;
+
+                try {
+                    await navigator.clipboard.writeText(kod);
+                    pokazKomunikatFormularzy("✅ Skopiowano kod osadzenia.");
+                } catch {
+                    pokazKomunikatFormularzy("❌ Nie udało się skopiować kodu.");
+                }
+            };
+
+            kontener.append(nazwa, status, przycisk);
+            lista.appendChild(kontener);
+        }
+
+    } catch (error) {
+        lista.textContent = "❌ " + error.message;
+    }
+}
+
+async function utworzFormularz() {
+    const pole = document.getElementById("formName");
+    const nazwa = pole.value.trim();
+
+    if (nazwa.length < 3 || nazwa.length > 100) {
+        pokazKomunikatFormularzy(
+            "❌ Nazwa musi mieć od 3 do 100 znaków."
+        );
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/forms", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ nazwa })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || "Nie udało się utworzyć formularza."
+            );
+        }
+
+        pole.value = "";
+        pokazKomunikatFormularzy("✅ Formularz utworzony.");
+
+        await pobierzFormularze();
+
+    } catch (error) {
+        pokazKomunikatFormularzy("❌ " + error.message);
+    }
+}
+
+// ========================================
 // START
 // ========================================
 
 pobierzApiKey();
+pobierzFormularze();
 
 </script>
 

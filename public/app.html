@@ -364,6 +364,60 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
 
+
+        /* Ciemny motyw szczegółów leada */
+        #leadModal {
+            background: rgba(2, 6, 23, 0.78);
+        }
+
+        #leadModal .modal-content {
+            background: #0f172a;
+            color: #f1f5f9;
+            border: 1px solid #334155;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+        }
+
+        #leadModal .detail,
+        #leadModal .message,
+        #leadModal .history-item {
+            background: #1e293b;
+            color: #f1f5f9;
+            border: 1px solid #334155;
+        }
+
+        #leadModal .detail-label {
+            color: #94a3b8;
+        }
+
+        #leadModal .detail-value {
+            color: #f8fafc;
+        }
+
+        #leadModal input,
+        #leadModal select,
+        #leadModal textarea {
+            background: #111c30;
+            color: #f8fafc;
+            border: 1px solid #475569;
+        }
+
+        #leadModal input:focus,
+        #leadModal select:focus,
+        #leadModal textarea:focus {
+            outline: 2px solid #818cf8;
+            outline-offset: 1px;
+        }
+
+        #leadModal input::placeholder,
+        #leadModal textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        #leadModal .close {
+            background: #334155;
+            color: #f8fafc;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -2845,8 +2899,18 @@ function pokazLeada(lead) {
             <div class="detail-value">${lead.id}</div>
         </div>
         <div class="detail">
+            <div class="detail-label">Rodzaj transakcji</div>
+            <div class="detail-value">${lead.typ_transakcji === "WYNAJEM" ? "WYNAJEM" : lead.typ_transakcji === "KUPNO" ? "KUPNO" : "Brak danych"}</div>
+        </div>
+        <div class="detail">
             <div class="detail-label">AI</div>
-            <div class="detail-value">${lead.klasyfikacja}</div>
+            <div class="detail-value">
+                <span class="badge ${
+                    lead.klasyfikacja === "HOT" ? "badge-hot" :
+                    lead.klasyfikacja === "WARM" ? "badge-warm" :
+                    "badge-cold"
+                }">${lead.klasyfikacja}</span>
+            </div>
         </div>
         <div class="detail">
             <div class="detail-label">Score</div>

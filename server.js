@@ -12,6 +12,21 @@ const {
 } = require("express-rate-limit");
 
 const app = express();
+
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
+
+if (
+    !Number.isInteger(trustProxyHops) ||
+    trustProxyHops < 0 ||
+    trustProxyHops > 5
+) {
+    console.error("❌ TRUST_PROXY_HOPS musi być liczbą od 0 do 5.");
+    process.exit(1);
+}
+
+if (trustProxyHops > 0) {
+    app.set("trust proxy", trustProxyHops);
+}
 const PORT =
     Number(process.env.PORT) || 3000;
 
@@ -165,6 +180,18 @@ app.use((req, res, next) => {
 
 app.use(express.static("public"));
 
+
+// Publiczna konfiguracja Cloudflare Turnstile
+app.get("/api/public/turnstile-config", (req, res) => {
+    res.set("Cache-Control", "no-store");
+
+    res.json({
+        siteKey: process.env.TURNSTILE_SITE_KEY || ""
+    });
+});
+
+
+
 // ======================================================
 // RATE LIMITING
 // ======================================================
@@ -191,6 +218,18 @@ const registerLimiter = rateLimit({
         success: false,
         message:
             "Zbyt wiele prób rejestracji. Spróbuj ponownie później."
+    }
+});
+
+
+const publicFormsLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: "Zbyt wiele zgłoszeń. Spróbuj ponownie później."
     }
 });
 
@@ -664,7 +703,29 @@ db.prepare(`
     CREATE INDEX IF NOT EXISTS idx_plan_history_date
     ON plan_history(data_zmiany)
 `).run();
+// ======================================================
+// FORMULARZE FIRM
+// ======================================================
 
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS company_forms (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company_id INTEGER NOT NULL,
+        public_id TEXT NOT NULL UNIQUE,
+        nazwa TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (company_id)
+            REFERENCES companies(id)
+            ON DELETE CASCADE
+    )
+`).run();
+
+db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_company_forms_company
+    ON company_forms(company_id)
+`).run();
 
 // ======================================================
 // LEADS
@@ -989,13 +1050,24 @@ function pobierzScoringFirmy(companyId) {
 }
 
 
-function policzScore(dane, scoring) {
+function policzScore(dane, scoring, typTransakcji = null) {
 
     let score = 0;
 
 
     const budzet =
         Number(dane.budzet);
+
+    const czyWynajem =
+        (typTransakcji ?? dane.typ_transakcji) === "WYNAJEM";
+
+    const progWysoki = czyWynajem
+        ? scoring.wynajem_budzet_wysoki
+        : scoring.budzet_wysoki;
+
+    const progSredni = czyWynajem
+        ? scoring.wynajem_budzet_sredni
+        : scoring.budzet_sredni;
 
 
     if (
@@ -1005,14 +1077,14 @@ function policzScore(dane, scoring) {
     ) {
 
         if (
-            budzet >= scoring.budzet_wysoki
+            budzet >= progWysoki
         ) {
 
             score +=
                 scoring.punkty_budzet_wysoki;
 
         } else if (
-            budzet >= scoring.budzet_sredni
+            budzet >= progSredni
         ) {
 
             score +=
@@ -1411,7 +1483,8 @@ function sprawdzLimitLeadowFirmy(
 function zapiszLeadaDoFirmy(
     wiadomosc,
     dane,
-    companyId
+    companyId,
+    typTransakcji = null
 ) {
 
     
@@ -1423,7 +1496,8 @@ const scoring =
     const score =
         policzScore(
             dane,
-            scoring
+            scoring,
+            typTransakcji
         );
 
     const klasyfikacja =
@@ -1446,9 +1520,10 @@ const scoring =
                 score,
                 klasyfikacja,
                 status_obslugi,
-                company_id
+                company_id,
+                typ_transakcji
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
 
             wiadomosc,
@@ -1460,7 +1535,8 @@ const scoring =
             score,
             klasyfikacja,
             "NOWY",
-            companyId
+            companyId,
+            typTransakcji
         );
 
 
@@ -3648,6 +3724,332 @@ if (!limitPoAnalizie.allowed) {
 );
 
 
+// ======================================================
+// FORMULARZE FIRM - PANEL ZARZĄDZANIA
+// ======================================================
+
+// Lista formularzy zalogowanej firmy
+app.get(
+    "/api/forms",
+    wymagajLogowania,
+    (req, res) => {
+        try {
+            const forms = db.prepare(`
+                SELECT
+                    id,
+                    public_id,
+                    nazwa,
+                    active,
+                    created_at
+                FROM company_forms
+                WHERE company_id = ?
+                ORDER BY id DESC
+            `).all(req.user.companyId);
+
+            return res.json({
+                success: true,
+                forms
+            });
+        } catch (error) {
+            console.error("Pobieranie formularzy:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Nie udało się pobrać formularzy."
+            });
+        }
+    }
+);
+
+
+// Tworzenie nowego formularza
+app.post(
+    "/api/forms",
+    wymagajLogowania,
+    wymagajOwnera,
+    (req, res) => {
+        try {
+            const nazwa = req.body?.nazwa;
+
+            if (
+                typeof nazwa !== "string" ||
+                nazwa.trim().length < 3 ||
+                nazwa.trim().length > 100
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Nazwa musi mieć od 3 do 100 znaków."
+                });
+            }
+
+            // Maksymalnie 20 formularzy na firmę
+            const { count } = db.prepare(`
+                SELECT COUNT(*) AS count
+                FROM company_forms
+                WHERE company_id = ?
+            `).get(req.user.companyId);
+
+            if (count >= 20) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Osiągnięto limit 20 formularzy."
+                });
+            }
+
+            const publicId = crypto.randomBytes(24).toString("hex");
+
+            const wynik = db.prepare(`
+                INSERT INTO company_forms (
+                    company_id,
+                    public_id,
+                    nazwa
+                )
+                VALUES (?, ?, ?)
+            `).run(
+                req.user.companyId,
+                publicId,
+                nazwa.trim()
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: "Formularz został utworzony.",
+                form: {
+                    id: Number(wynik.lastInsertRowid),
+                    public_id: publicId,
+                    nazwa: nazwa.trim(),
+                    active: 1
+                }
+            });
+        } catch (error) {
+            console.error("Tworzenie formularza:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Nie udało się utworzyć formularza."
+            });
+        }
+    }
+);
+
+
+// ======================================================
+// PUBLICZNE FORMULARZE FIRM
+// ======================================================
+
+app.post(
+    "/api/public/forms/:publicId/submit",
+    publicFormsLimiter,
+    async (req, res) => {
+        try {
+            const publicId = req.params.publicId;
+
+            if (!/^[a-f0-9]{48}$/.test(publicId)) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Nie znaleziono formularza."
+                });
+            }
+
+            const form = db.prepare(`
+                SELECT id, company_id, active
+                FROM company_forms
+                WHERE public_id = ?
+            `).get(publicId);
+
+            if (!form || form.active !== 1) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Formularz jest niedostępny."
+                });
+            }
+
+            // Honeypot: blokowanie automatycznych zgłoszeń
+            const website = req.body?.website;
+
+            if (
+                website !== undefined &&
+                (typeof website !== "string" || website.length > 0)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Nie udało się wysłać zapytania."
+                });
+            }
+
+            const { imie, email, telefon, miasto, typTransakcji, budzet, wiadomosc } =
+                req.body || {};
+
+            const fields = {
+                imie,
+                email,
+                telefon,
+                miasto,
+                budzet,
+                wiadomosc
+            };
+
+            for (const value of Object.values(fields)) {
+                if (
+                    typeof value !== "string" ||
+                    !value.trim()
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Wypełnij wszystkie pola."
+                    });
+                }
+            }
+
+            if (
+                imie.length > 100 ||
+                email.length > 254 ||
+                telefon.length > 40 ||
+                miasto.length > 100 ||
+                budzet.length > 100 ||
+                wiadomosc.length > 3000
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Przekroczono maksymalną długość pola."
+                });
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Podaj prawidłowy adres e-mail."
+                });
+            }
+
+            if (!["KUPNO", "WYNAJEM"].includes(typTransakcji)) {
+                return res.status(400).json({ success: false, message: "Wybierz rodzaj transakcji." });
+            }
+
+            const tresc = [
+                `Imię: ${imie.trim()}`,
+                `Email: ${email.trim()}`,
+                `Telefon: ${telefon.trim()}`,
+                `Miasto: ${miasto.trim()}`,
+                `Rodzaj transakcji: ${typTransakcji}`,
+                `Budżet ${typTransakcji === "WYNAJEM" ? "miesięczny" : "na zakup"}: ${budzet.trim()} PLN`,
+                `Wiadomość: ${wiadomosc.trim()}`
+            ].join("\n");
+
+            if (tresc.length > 5000) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Zgłoszenie jest za długie."
+                });
+            }
+
+            const limit = sprawdzLimitLeadowFirmy(
+                form.company_id
+            );
+
+            if (!limit.allowed) {
+                return res.status(403).json({
+                    success: false,
+                    code: "PLAN_LEAD_LIMIT_REACHED",
+                    message: "Formularz jest chwilowo niedostępny."
+                });
+            }
+
+            // Cloudflare Turnstile: weryfikacja przed analizą AI
+            const turnstileToken = req.body?.turnstileToken;
+            const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+
+            if (
+                !turnstileSecret ||
+                typeof turnstileToken !== "string" ||
+                !turnstileToken ||
+                turnstileToken.length > 2048
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Nie udało się potwierdzić weryfikacji antyspamowej."
+                });
+            }
+
+            const verificationBody = new URLSearchParams({
+                secret: turnstileSecret,
+                response: turnstileToken
+            });
+
+            let turnstileValid = false;
+
+            try {
+                const verificationResponse = await fetch(
+                    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: verificationBody,
+                        signal: AbortSignal.timeout(5000)
+                    }
+                );
+
+                if (verificationResponse.ok) {
+                    const verification = await verificationResponse.json();
+                    turnstileValid = verification.success === true;
+                }
+            } catch (verificationError) {
+                console.error(
+                    "Błąd weryfikacji Turnstile:",
+                    verificationError.message
+                );
+            }
+
+            if (!turnstileValid) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Weryfikacja antyspamowa nie powiodła się. Spróbuj ponownie."
+                });
+            }
+
+            const dane = await analizujWiadomosc(tresc);
+
+            const limitPoAnalizie = sprawdzLimitLeadowFirmy(
+                form.company_id
+            );
+
+            if (!limitPoAnalizie.allowed) {
+                return res.status(403).json({
+                    success: false,
+                    code: "PLAN_LEAD_LIMIT_REACHED",
+                    message: "Formularz jest chwilowo niedostępny."
+                });
+            }
+
+            zapiszLeadaDoFirmy(
+                tresc,
+                dane,
+                form.company_id,
+                typTransakcji
+            );
+
+            return res.status(201).json({
+                success: true,
+                message: "Dziękujemy! Zapytanie zostało wysłane."
+            });
+
+        } catch (error) {
+            console.error(
+                "Publiczny formularz:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Nie udało się wysłać zapytania."
+            });
+        }
+    }
+);
+
+
 app.post(
     "/api/external/leads",
     wymagajApiKey,
@@ -3919,7 +4321,8 @@ for (const pole of polaTekstowe) {
                     poziom_zainteresowania:
                         zainteresowanie
                 },
-                scoring
+                scoring,
+                lead.typ_transakcji
             );
 
         const klasyfikacja =
@@ -4309,6 +4712,8 @@ app.patch(
             const pola = [
                 "budzet_wysoki",
                 "budzet_sredni",
+                "wynajem_budzet_sredni",
+                "wynajem_budzet_wysoki",
 
                 "punkty_budzet_wysoki",
                 "punkty_budzet_sredni",
@@ -4396,6 +4801,17 @@ app.patch(
                     });
             }
 
+
+            if (
+                dane.wynajem_budzet_sredni < 0 ||
+                dane.wynajem_budzet_wysoki < 0 ||
+                dane.wynajem_budzet_wysoki < dane.wynajem_budzet_sredni
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Nieprawidłowe progi budżetu wynajmu."
+                });
+            }
 
             // ========================================
             // WALIDACJA PUNKTÓW
@@ -4491,6 +4907,8 @@ app.patch(
                 SET
                     budzet_wysoki = ?,
                     budzet_sredni = ?,
+                    wynajem_budzet_sredni = ?,
+                    wynajem_budzet_wysoki = ?,
 
                     punkty_budzet_wysoki = ?,
                     punkty_budzet_sredni = ?,
@@ -4510,6 +4928,8 @@ app.patch(
 
                 dane.budzet_wysoki,
                 dane.budzet_sredni,
+                dane.wynajem_budzet_sredni,
+                dane.wynajem_budzet_wysoki,
 
                 dane.punkty_budzet_wysoki,
                 dane.punkty_budzet_sredni,

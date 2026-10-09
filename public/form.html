@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Formularz kontaktowy</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 28px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.06);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        p {
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+       input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: 2px solid #2563eb;
+            border-color: transparent;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        #message {
+            margin-top: 16px;
+            font-weight: 600;
+        }
+
+        .honeypot {
+            position: absolute;
+            left: -9999px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="form-container">
+
+    <h2>Skontaktuj się z nami</h2>
+    <p>Wypełnij formularz, a skontaktujemy się z Tobą.</p>
+
+    <form id="contactForm">
+
+        <label for="imie">Imię i nazwisko</label>
+        <input id="imie" name="imie" maxlength="100" required>
+
+        <label for="email">Adres e-mail</label>
+        <input id="email" name="email" type="email" maxlength="254" required>
+
+        <label for="telefon">Telefon</label>
+        <input id="telefon" name="telefon" type="tel" maxlength="40" required>
+
+        <label for="miasto">Miasto</label>
+        <input id="miasto" name="miasto" maxlength="100" required>
+
+       <label for="typTransakcji">Rodzaj transakcji</label>
+<select id="typTransakcji" name="typTransakcji" required>
+    <option value="">Wybierz rodzaj transakcji</option>
+    <option value="KUPNO">Kupno</option>
+    <option value="WYNAJEM">Wynajem</option>
+</select>
+
+<label for="budzet" id="budzetLabel">Budżet (zł)</label>
+<input
+    id="budzet"
+    name="budzet"
+    maxlength="100"
+    inputmode="numeric"
+    required
+>
+
+        <label for="wiadomosc">Wiadomość</label>
+        <textarea
+            id="wiadomosc"
+            name="wiadomosc"
+            maxlength="3000"
+            required
+        ></textarea>
+
+        <div class="honeypot" aria-hidden="true">
+            <label for="website">Strona internetowa</label>
+            <input
+                id="website"
+                name="website"
+                tabindex="-1"
+                autocomplete="off"
+            >
+        </div>
+
+        <div id="turnstile-widget"></div>
+
+        <button id="submitButton" type="submit">
+            Wyślij zapytanie
+        </button>
+
+        <div id="message" role="status" aria-live="polite"></div>
+
+    </form>
+
+</div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script>
+let turnstileWidgetId = null;
+
+async function initTurnstile() {
+    const response = await fetch("/api/public/turnstile-config");
+    if (!response.ok) throw new Error("Brak konfiguracji Turnstile.");
+
+    const { siteKey } = await response.json();
+    if (!siteKey) throw new Error("Brak klucza Turnstile.");
+
+    while (!window.turnstile) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    turnstileWidgetId = window.turnstile.render("#turnstile-widget", {
+        sitekey: siteKey
+    });
+}
+
+initTurnstile().catch(error => {
+    console.error("Turnstile:", error.message);
+    document.getElementById("message").textContent =
+        "Nie udało się uruchomić zabezpieczenia formularza.";
+});
+
+const params = new URLSearchParams(window.location.search);
+const publicId = params.get("id");
+
+const form = document.getElementById("contactForm");
+const button = document.getElementById("submitButton");
+const message = document.getElementById("message");
+const typTransakcji = document.getElementById("typTransakcji");
+const budzetLabel = document.getElementById("budzetLabel");
+const budzetInput = document.getElementById("budzet");
+
+typTransakcji.addEventListener("change", () => {
+    if (typTransakcji.value === "KUPNO") {
+        budzetLabel.textContent = "Budżet na zakup (zł)";
+        budzetInput.placeholder = "np. 600000";
+    } else if (typTransakcji.value === "WYNAJEM") {
+        budzetLabel.textContent = "Budżet miesięczny (zł/mies.)";
+        budzetInput.placeholder = "np. 5000";
+    } else {
+        budzetLabel.textContent = "Budżet (zł)";
+        budzetInput.placeholder = "";
+    }
+});
+
+if (!publicId || !/^[a-f0-9]{48}$/.test(publicId)) {
+    form.hidden = true;
+    message.textContent = "Nieprawidłowy link do formularza.";
+}
+
+form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!publicId || !/^[a-f0-9]{48}$/.test(publicId)) {
+        return;
+    }
+
+    message.textContent = "";
+
+    // Pole pułapka na proste boty
+    if (form.elements.website.value.trim()) {
+        message.textContent = "Dziękujemy za zgłoszenie.";
+        form.reset();
+        return;
+    }
+
+    const turnstileToken = window.turnstile && turnstileWidgetId !== null
+        ? window.turnstile.getResponse(turnstileWidgetId)
+        : "";
+
+    if (!turnstileToken) {
+        message.textContent = "Potwierdź weryfikację antyspamową.";
+        return;
+    }
+
+    const dane = {
+        website: form.elements.website.value,
+        turnstileToken,
+        imie: form.elements.imie.value.trim(),
+        email: form.elements.email.value.trim(),
+        telefon: form.elements.telefon.value.trim(),
+       miasto: form.elements.miasto.value.trim(),
+typTransakcji: form.elements.typTransakcji.value,
+budzet: form.elements.budzet.value.trim(),
+        wiadomosc: form.elements.wiadomosc.value.trim()
+    };
+
+    button.disabled = true;
+    button.textContent = "Wysyłanie...";
+
+    try {
+        const response = await fetch(
+            `/api/public/forms/${encodeURIComponent(publicId)}/submit`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(dane)
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.message || "Nie udało się wysłać formularza."
+            );
+        }
+
+        message.style.color = "#15803d";
+        message.textContent = "✅ Zapytanie zostało wysłane!";
+        form.reset();
+
+    } catch (error) {
+        message.style.color = "#dc2626";
+        message.textContent = "❌ " + error.message;
+
+    } finally {
+        if (window.turnstile && turnstileWidgetId !== null) {
+            window.turnstile.reset(turnstileWidgetId);
+        }
+        button.disabled = false;
+        button.textContent = "Wyślij zapytanie";
+    }
+});
+</script>
+
+</body>
+</html>

@@ -159,6 +159,16 @@
             </div>
 
             <div class="form-group">
+                <label>Średni budżet wynajmu (zł/mies.)</label>
+                <input id="wynajem_budzet_sredni" type="number" min="0">
+            </div>
+
+            <div class="form-group">
+                <label>Wysoki budżet wynajmu (zł/mies.)</label>
+                <input id="wynajem_budzet_wysoki" type="number" min="0">
+            </div>
+
+            <div class="form-group">
                 <label>Punkty za wysoki budżet</label>
                 <input id="punkty_budzet_wysoki" type="number">
             </div>
@@ -180,7 +190,7 @@
 
     <div class="card">
 
-        <h2>⏱ Termin zakupu</h2>
+        <h2>⏱ Termin transakcji</h2>
 
         <div class="grid">
 
@@ -268,6 +278,8 @@ if (!token) {
 const pola = [
     "budzet_wysoki",
     "budzet_sredni",
+    "wynajem_budzet_sredni",
+    "wynajem_budzet_wysoki",
     "punkty_budzet_wysoki",
     "punkty_budzet_sredni",
     "punkty_budzet_niski",

@@ -30,3 +30,8 @@ public/*-before-*.html
 
 # Backupy bazy danych
 backups/
+
+# Lokalne kopie zapasowe
+*.bak
+*.backup
+*.backup-*
