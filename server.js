@@ -775,6 +775,14 @@ if (!leadColumns.includes("company_id")) {
 }
 
 
+if (!leadColumns.includes("typ_transakcji")) {
+    db.prepare(`
+        ALTER TABLE leads
+        ADD COLUMN typ_transakcji TEXT
+    `).run();
+}
+
+
 // ======================================================
 // HISTORIA
 // ======================================================
