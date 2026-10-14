@@ -1,3 +1,4 @@
+const { maskujDaneKontaktowe } = require("./privacy");
 require("dotenv").config();
 
 const OpenAI = require("openai");
@@ -61,7 +62,7 @@ async function analizujLeada(wiadomoscKlienta) {
         Jeżeli informacji nie ma, wpisz null.
 
         Wiadomość klienta:
-        ${wiadomoscKlienta}
+        ${maskujDaneKontaktowe(wiadomoscKlienta)}
         `
     });
 

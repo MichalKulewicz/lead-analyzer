@@ -1,3 +1,4 @@
+const { maskujDaneKontaktowe } = require("./privacy");
 require("dotenv").config();
 
 const OpenAI = require("openai");
@@ -47,7 +48,7 @@ async function main() {
                 wpisz null.
 
                 Wiadomość klienta:
-                ${wiadomoscKlienta}
+                ${maskujDaneKontaktowe(wiadomoscKlienta)}
                 `
             });
 

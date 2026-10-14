@@ -1,3 +1,4 @@
+const { maskujDaneKontaktowe } = require("./privacy");
 require("dotenv").config();
 
 const express = require("express");
@@ -1222,7 +1223,7 @@ Zasady:
 
 Wiadomość:
 
-${wiadomosc}
+${maskujDaneKontaktowe(wiadomosc)}
 `
         });
 
@@ -4017,7 +4018,14 @@ app.post(
                 });
             }
 
-            const dane = await analizujWiadomosc(tresc);
+            const trescDoAI = [
+                `Miasto: ${miasto.trim()}`,
+                `Rodzaj transakcji: ${typTransakcji}`,
+                `Budżet ${typTransakcji === "WYNAJEM" ? "miesięczny" : "na zakup"}: ${budzet.trim()} PLN`,
+                `Wiadomość: ${wiadomosc.trim()}`
+            ].join("\n");
+
+            const dane = await analizujWiadomosc(trescDoAI);
 
             const limitPoAnalizie = sprawdzLimitLeadowFirmy(
                 form.company_id
