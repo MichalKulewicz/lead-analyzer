@@ -4,7 +4,19 @@ function maskujDaneKontaktowe(wiadomosc) {
     }
 
     const chronioneKwoty = [];
+wiadomosc = wiadomosc.replace(
+  /(\bnazywam\s+się\s+)([\p{Lu}][\p{L}'-]+)\s+([\p{Lu}][\p{L}'-]+)/giu,
+  "$1[IMIE_I_NAZWISKO]"
+);
+wiadomosc = wiadomosc.replace(
+  /(\bmam\s+na\s+imię\s+)([\p{Lu}][\p{L}'-]+)\s+([\p{Lu}][\p{L}'-]+)/giu,
+  "$1[IMIE_I_NAZWISKO]"
+);
 
+wiadomosc = wiadomosc.replace(
+  /(\bkontakt\s*:\s*)([\p{Lu}][\p{L}'-]+)\s+([\p{Lu}][\p{L}'-]+)/giu,
+  "$1[IMIE_I_NAZWISKO]"
+);
     let tekst = wiadomosc.replace(
         /(?<![\w+])\d[\d\s.,]*\s*(?:PLN|złotych|zł|EUR|USD)\b/gi,
         (kwota) => {

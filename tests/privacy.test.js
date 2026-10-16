@@ -50,3 +50,30 @@ test("Odrzuca dane inne niz tekst", () => {
 test.todo("Maskowanie imienia i nazwiska");
 test.todo("Maskowanie nietypowych numerow telefonow");
 test.todo("Weryfikacja danych przesylanych z formularza do AI");
+
+test("Ukrywa imie i nazwisko po frazie nazywam sie", () => {
+  const wynik = maskujDaneKontaktowe(
+    "Nazywam się Anna Kowalska, budżet 650000 PLN, Łomża"
+  );
+
+  assert.doesNotMatch(wynik, /Anna Kowalska/);
+  assert.match(wynik, /650000 PLN/);
+  assert.match(wynik, /Łomża/);
+});
+test("Ukrywa dane po frazie mam na imie", () => {
+  const wynik = maskujDaneKontaktowe(
+    "Mam na imię Anna Kowalska, szukam mieszkania"
+  );
+
+  assert.doesNotMatch(wynik, /Anna Kowalska/);
+  assert.match(wynik, /szukam mieszkania/);
+});
+
+test("Ukrywa imie i nazwisko po etykiecie Kontakt", () => {
+  const wynik = maskujDaneKontaktowe(
+    "Kontakt: Jan Nowak, 500-600-700"
+  );
+
+  assert.doesNotMatch(wynik, /Jan Nowak/);
+  assert.doesNotMatch(wynik, /500-600-700/);
+});
